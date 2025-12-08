@@ -1,0 +1,51 @@
+
+--Login (post)
+http://localhost:8080/api/auth/login
+
+--Register(post) 
+http://localhost:8080/api/auth/register
+{
+  "username": "admin",
+  "password": "1234",
+  "role": "ADMIN"
+}
+
+--http://localhost:8080/api/plateformes
+{
+  "nomPlateforme":"sms"
+}
+
+--http://localhost:8080/api/messages
+{
+  "texte":"sms test"
+}
+
+--http://localhost:8080/api/numeros_expediteur
+{
+  "valeur": "26134987654"
+}
+
+--http://localhost:8080/api/numeros_destinataire
+{
+  "valeur": "26134987654"
+}
+
+--http://localhost:8080/api/infobip
+{
+    "apiKey": "nouvelle_cle",
+    "baseUrl": "https://api.infobip.com/v2",
+    "idNumero":1
+}
+
+http://localhost:8080/sms/sendByIdNumero
+{
+  "idDestinataire": 1,
+  "idNumero": 3,
+  "message": "Bonjour, ceci est un test via ID destinataire."
+}
+
+http://localhost:8080/users-detail
+{
+  "infobipId":1
+}
+	
