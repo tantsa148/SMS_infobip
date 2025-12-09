@@ -2,9 +2,17 @@ package sms.back_end.dto;
 
 public class UsersDetailRequest {
 
-    private Long idInfobip;
+    private Long idNumero; // ID du NumeroExpediteur envoyé depuis le JSON
 
-    // Getter & Setter
-    public Long getIdInfobip() { return idInfobip; }
-    public void setIdInfobip(Long idInfobip) { this.idInfobip = idInfobip; }
+    public UsersDetailRequest() {}
+
+    public UsersDetailRequest(Long idNumero) {
+        this.idNumero = idNumero;
+    }
+
+    // ============================
+    // Getters & Setters
+    // ============================
+    public Long getIdNumero() { return idNumero; }
+    public void setIdNumero(Long idNumero) { this.idNumero = idNumero; }
 }

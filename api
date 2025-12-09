@@ -32,9 +32,8 @@ http://localhost:8080/api/auth/register
 
 --http://localhost:8080/api/infobip
 {
-    "apiKey": "nouvelle_cle",
-    "baseUrl": "https://api.infobip.com/v2",
-    "idNumero":1
+  "apiKey": "NOUVEAU_API_KEY",
+  "baseUrl": "https://api.infobip.com/v2"
 }
 
 http://localhost:8080/sms/sendByIdNumero

@@ -1,15 +1,12 @@
--- Supprimer la base (si elle existe)
+
+-- Supprimer et recréer la base
 DROP DATABASE IF EXISTS sms;
-
--- Créer la base
 CREATE DATABASE sms;
+\c sms;
 
--- Pour se connecter à la base sms
-\c sms
-
-
-
--- Table Utilisateur (exemple existant)
+--------------------------------------------------
+-- Table Utilisateur
+--------------------------------------------------
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -18,62 +15,80 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table Numero
-CREATE TABLE numero (
+--------------------------------------------------
+-- Table Numero Expéditeur
+--------------------------------------------------
+CREATE TABLE numero_expediteur (
     id_numero SERIAL PRIMARY KEY,
-    valeur_numero VARCHAR(20) NOT NULL UNIQUE,
+    valeur_numero VARCHAR(20) NOT NULL UNIQUE CHECK (valeur_numero <> ''),
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE numero
-ADD CONSTRAINT valeur_numero_non_vide CHECK (valeur_numero <> '');
-ALTER TABLE numero RENAME TO numero_expediteur;
 
--- infobip_info
-
--- Recréation correcte de infobip_info avec foreign key
+--------------------------------------------------
+-- Table Infobip (API + Base URL)
+-- ✅ On enlève id_numero ici
+--------------------------------------------------
 CREATE TABLE infobip_info (
-    id SERIAL PRIMARY KEY,  -- ID auto-incrémenté
-    api_key VARCHAR(50),
-    base_url VARCHAR(50),
-    id_numero INTEGER,
-    CONSTRAINT fk_numero FOREIGN KEY (id_numero)
-        REFERENCES numero_expediteur(id_numero)
-        ON DELETE SET NULL
+    id SERIAL PRIMARY KEY,
+    api_key VARCHAR(100) NOT NULL,
+    base_url VARCHAR(150) NOT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---usersDetail
+--------------------------------------------------
+-- ✅ Relation entre Infobip et Numéro (1-N)
+-- Un numero appartient à une api_key
+--------------------------------------------------
+ALTER TABLE numero_expediteur
+ADD COLUMN id_infobip INT;
+
+ALTER TABLE numero_expediteur
+ADD CONSTRAINT fk_numero_infobip
+FOREIGN KEY (id_infobip)
+REFERENCES infobip_info(id)
+ON DELETE SET NULL;
+
+--------------------------------------------------
+-- Table Users Detail
+--------------------------------------------------
 CREATE TABLE users_detail (
     id_utilisateur INT NOT NULL,
-    id_infobip VARCHAR(50) NOT NULL,  -- on change id_numero en id_infobip
+    id_numero INT NOT NULL,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_utilisateur, id_infobip),
+    PRIMARY KEY (id_utilisateur, id_numero),
     FOREIGN KEY (id_utilisateur) REFERENCES users(id),
-    FOREIGN KEY (id_infobip) REFERENCES infobip_info(id)
+    FOREIGN KEY (id_numero) REFERENCES numero_expediteur(id_numero)
 );
 
---Dest
+--------------------------------------------------
+-- Table Numéro Destinataire
+--------------------------------------------------
 CREATE TABLE numero_destinataire (
     id_numero SERIAL PRIMARY KEY,
-    valeur_numero VARCHAR(50) NOT NULL UNIQUE,
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT valeur_numero_non_vide CHECK (valeur_numero <> '')
+    valeur_numero VARCHAR(50) NOT NULL UNIQUE CHECK (valeur_numero <> ''),
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
+--------------------------------------------------
+-- Table Messages
+--------------------------------------------------
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     texte TEXT NOT NULL
 );
 
+--------------------------------------------------
 -- Table Plateforme
+--------------------------------------------------
 CREATE TABLE plateforme (
     id SERIAL PRIMARY KEY,
     nom_plateform VARCHAR(50) UNIQUE NOT NULL,
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- Table DisponibleSur (relation N:N entre Numero et Plateforme)
+--------------------------------------------------
+-- Relation Numéro Destinataire - Plateforme (N:N)
+--------------------------------------------------
 CREATE TABLE destinataire_plateforme (
     id_numero INT NOT NULL,
     id_plateforme INT NOT NULL,
@@ -82,7 +97,9 @@ CREATE TABLE destinataire_plateforme (
     FOREIGN KEY (id_plateforme) REFERENCES plateforme(id)
 );
 
-
+--------------------------------------------------
+-- Relation Numéro Expéditeur - Plateforme (N:N)
+--------------------------------------------------
 CREATE TABLE expediteur_plateforme (
     id_numero INT NOT NULL,
     id_plateforme INT NOT NULL,
@@ -91,6 +108,22 @@ CREATE TABLE expediteur_plateforme (
     FOREIGN KEY (id_plateforme) REFERENCES plateforme(id)
 );
 
-
-
+--------------------------------------------------
+-- Table Messages envoyés (✅ correction des erreurs)
+--------------------------------------------------
+CREATE TABLE message_envoye (
+    id SERIAL PRIMARY KEY,
+    id_numero_expediteur INT NOT NULL,
+    id_message INT NOT NULL,
+    id_numero_destinataire INT NOT NULL,
+    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_numero_expediteur) REFERENCES numero_expediteur(id_numero),
+    FOREIGN KEY (id_message) REFERENCES messages(id),
+    FOREIGN KEY (id_numero_destinataire) REFERENCES numero_destinataire(id_numero)
+);
+ALTER TABLE message_envoye 
+ADD COLUMN infobip_message_id VARCHAR(100);
+ALTER TABLE message_envoye
+ALTER COLUMN id 
+ADD GENERATED BY DEFAULT AS IDENTITY;
 

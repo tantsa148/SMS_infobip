@@ -17,72 +17,37 @@ public class MessageEnvoye {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "id_numero_expediteur")
+    @Column(name = "id_numero_expediteur", nullable = false)
     private Long idNumeroExpediteur;
 
-    @Column(name = "id_message")
+    @Column(name = "id_message", nullable = false)
     private Long idMessage;
 
-    @Column(name = "id_numero_destinataire")
+    @Column(name = "id_numero_destinataire", nullable = false)
     private Long idNumeroDestinataire;
-
-    @Column(name = "infobip_message_id")
-    private String infobipMessageId;
 
     @Column(name = "date_envoi")
     private LocalDateTime dateEnvoi = LocalDateTime.now();
 
-    // =====================
-    // Getters
-    // =====================
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "infobip_message_id")
+    private String infobipMessageId;
 
-    public Long getIdNumeroExpediteur() {
-        return idNumeroExpediteur;
-    }
+    // Getters & Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getIdMessage() {
-        return idMessage;
-    }
+    public Long getIdNumeroExpediteur() { return idNumeroExpediteur; }
+    public void setIdNumeroExpediteur(Long idNumeroExpediteur) { this.idNumeroExpediteur = idNumeroExpediteur; }
 
-    public Long getIdNumeroDestinataire() {
-        return idNumeroDestinataire;
-    }
+    public Long getIdMessage() { return idMessage; }
+    public void setIdMessage(Long idMessage) { this.idMessage = idMessage; }
 
-    public String getInfobipMessageId() {
-        return infobipMessageId;
-    }
+    public Long getIdNumeroDestinataire() { return idNumeroDestinataire; }
+    public void setIdNumeroDestinataire(Long idNumeroDestinataire) { this.idNumeroDestinataire = idNumeroDestinataire; }
 
-    public LocalDateTime getDateEnvoi() {
-        return dateEnvoi;
-    }
+    public LocalDateTime getDateEnvoi() { return dateEnvoi; }
+    public void setDateEnvoi(LocalDateTime dateEnvoi) { this.dateEnvoi = dateEnvoi; }
 
-    // =====================
-    // Setters
-    // =====================
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setIdNumeroExpediteur(Long idNumeroExpediteur) {
-        this.idNumeroExpediteur = idNumeroExpediteur;
-    }
-
-    public void setIdMessage(Long idMessage) {
-        this.idMessage = idMessage;
-    }
-
-    public void setIdNumeroDestinataire(Long idNumeroDestinataire) {
-        this.idNumeroDestinataire = idNumeroDestinataire;
-    }
-
-    public void setInfobipMessageId(String infobipMessageId) {
-        this.infobipMessageId = infobipMessageId;
-    }
-
-    public void setDateEnvoi(LocalDateTime dateEnvoi) {
-        this.dateEnvoi = dateEnvoi;
-    }
+    public String getInfobipMessageId() { return infobipMessageId; }
+    public void setInfobipMessageId(String infobipMessageId) { this.infobipMessageId = infobipMessageId; }
 }

@@ -1,0 +1,16 @@
+/* global.css */
+body {
+  font-family: var(--bs-body-font-family);
+}
+/* Appliquer à toutes les balises h */
+h1, h2, h3, h4, h5, h6 {
+  color: #173169 !important; /* Votre couleur bleue */
+}
+
+/* Ou plus spécifique */
+h1, h2, h3, h4, h5, h6,
+.card-title,
+.section-title,
+.title {
+  color: #173169;
+}

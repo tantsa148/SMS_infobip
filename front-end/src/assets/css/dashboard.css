@@ -1,0 +1,237 @@
+/* ------------------ Reset et base ------------------ */
+.container {
+  padding: 20px;
+}
+
+.page-inner {
+  padding: 20px 0;
+}
+
+.row {
+  margin: 0 -10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.col-sm-6 {
+  padding: 0 10px;
+  margin-bottom: 20px;
+}
+
+/* ------------------ Cartes ------------------ */
+.card {
+  background: white;
+  border: none; /* suppression de la bordure */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); /* ombre */
+  transition: box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.card:hover {
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.2);
+}
+
+.card-body {
+  padding: 20px;
+  height: 100%;
+}
+
+/* ------------------ Layout sur même ligne ------------------ */
+.row.align-items-center {
+  display: flex;
+  align-items: center;
+  min-height: 80px;
+  width: 100%;
+}
+
+/* Icône à gauche */
+.col-icon {
+  flex-shrink: 0;
+  margin-right: 15px;
+}
+
+/* Texte à droite */
+.col-stats {
+  flex: 1;
+}
+
+.numbers.text-end {
+  text-align: right;
+  width: 100%;
+}
+
+/* ------------------ Icônes en carré / plus grande ------------------ */
+.icon-square {
+  width: 80px; /* taille agrandie */
+  height: 80px; /* taille agrandie */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px; /* icône plus grande */
+  background-color: #2b5388;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  transition: all 0.2s ease;
+}
+
+.icon-square:hover {
+  background-color: #598dd1;
+  transform: translateY(-2px);
+}
+
+/* ------------------ Contenu ------------------ */
+.card-category {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.card-title small {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2563eb;
+  display: block;
+}
+
+/* État vide */
+.card-title div:empty::before {
+  content: "0";
+  color: #9ca3af;
+}
+
+/* ------------------ Responsive ------------------ */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 16px;
+  }
+
+  .icon-square {
+    width: 60px;
+    height: 60px;
+    font-size: 22px;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .card-title small {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  .row.align-items-center {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .col-icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+
+  .col-stats {
+    width: 100%;
+  }
+
+  .numbers.text-end {
+    text-align: center;
+  }
+}
+
+/* ------------------ Loading state ------------------ */
+.card.loading {
+  background: linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Espacement uniforme */
+.numbers p {
+  margin-bottom: 4px;
+}
+
+.numbers h4 {
+  margin-top: 0;
+}
+
+/* ------------------ ALIGNEMENT ENTÊTE DES CARDS ------------------ */
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Ligne interne qui contient le titre + les boutons */
+.card-head-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Titre à gauche, boutons à droite */
+}
+
+/* Forcer le titre à rester bien aligné horizontalement */
+.card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* Boutons d’actions */
+.card-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* espace constant */
+}
+
+.card-tools .btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Icône dans le bouton */
+.card-tools .btn .btn-label i {
+  font-size: 14px;
+}
+
+/* ------------------ RESPONSIVE (mobile) ------------------ */
+@media (max-width: 576px) {
+  .card-head-row {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .card-tools {
+    justify-content: center;
+  }
+}

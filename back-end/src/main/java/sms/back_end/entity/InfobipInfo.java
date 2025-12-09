@@ -1,13 +1,14 @@
 package sms.back_end.entity;
 
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -18,16 +19,15 @@ public class InfobipInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "api_key", length = 255)
+    @Column(name = "api_key", length = 255, nullable = false)
     private String apiKey;
 
-    @Column(name = "base_url", length = 255)
+    @Column(name = "base_url", length = 255, nullable = false)
     private String baseUrl;
 
-    @ManyToOne
-    @JoinColumn(name = "id_numero", referencedColumnName = "id_numero",
-                foreignKey = @ForeignKey(name = "fk_numero"))
-    private NumeroExpediteur numeroExpediteur;
+    // Relation OneToMany vers NumeroExpediteur
+    @OneToMany(mappedBy = "infobipInfo", cascade = CascadeType.ALL)
+    private List<NumeroExpediteur> numerosExpediteurs;
 
     // Getters & Setters
     public Long getId() { return id; }
@@ -39,6 +39,8 @@ public class InfobipInfo {
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
 
-    public NumeroExpediteur getNumeroExpediteur() { return numeroExpediteur; }
-    public void setNumeroExpediteur(NumeroExpediteur numeroExpediteur) { this.numeroExpediteur = numeroExpediteur; }
+    public List<NumeroExpediteur> getNumerosExpediteurs() { return numerosExpediteurs; }
+    public void setNumerosExpediteurs(List<NumeroExpediteur> numerosExpediteurs) {
+        this.numerosExpediteurs = numerosExpediteurs;
+    }
 }

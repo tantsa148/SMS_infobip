@@ -7,59 +7,84 @@ import sms.back_end.entity.UsersDetail;
 public class UsersDetailDTO {
 
     private Long idUtilisateur;
-    private String username;
-    private String role;
-    private LocalDateTime dateCreationUtilisateur;
+    private Long idNumero;
+    private String numeroExpediteur; // valeur du numéro
+    private LocalDateTime dateCreation;
 
+    // Nouveaux champs pour InfobipInfo
     private Long idInfobip;
     private String apiKey;
     private String baseUrl;
 
-    private Long idNumero;
-    private String valeurNumero;
-    private LocalDateTime dateCreationNumero;
+    private Long idUser;
+    private String username;
+    private String role;
+    private LocalDateTime userCreatedAt;
 
-    private LocalDateTime dateCreationUsersDetail;
 
-    public UsersDetailDTO() {}
+public UsersDetailDTO(UsersDetail entity) {
+    this.idUtilisateur = entity.getIdUtilisateur();
+    this.idNumero = entity.getIdNumero();
+    this.dateCreation = entity.getDateCreation();
 
-    public static UsersDetailDTO fromEntity(UsersDetail ud) {
-        UsersDetailDTO dto = new UsersDetailDTO();
+    // Numéro expéditeur et InfobipInfo
+    if (entity.getNumeroExpediteur() != null) {
+        this.numeroExpediteur = entity.getNumeroExpediteur().getValeur();
 
-        // User
-        dto.idUtilisateur = ud.getUser().getId();
-        dto.username = ud.getUser().getUsername();
-        dto.role = ud.getUser().getRole();
-        dto.dateCreationUtilisateur = ud.getUser().getCreatedAt();
-
-        // Infobip
-        dto.idInfobip = ud.getInfobipInfo().getId();
-        dto.apiKey = ud.getInfobipInfo().getApiKey();
-        dto.baseUrl = ud.getInfobipInfo().getBaseUrl();
-
-        // NumeroExpediteur (peut être null)
-        if (ud.getInfobipInfo().getNumeroExpediteur() != null) {
-            dto.idNumero = ud.getInfobipInfo().getNumeroExpediteur().getId();
-            dto.valeurNumero = ud.getInfobipInfo().getNumeroExpediteur().getValeur();
-            dto.dateCreationNumero = ud.getInfobipInfo().getNumeroExpediteur().getDateCreation();
+        if (entity.getNumeroExpediteur().getInfobipInfo() != null) {
+            this.idInfobip = entity.getNumeroExpediteur().getInfobipInfo().getId();
+            this.apiKey = entity.getNumeroExpediteur().getInfobipInfo().getApiKey();
+            this.baseUrl = entity.getNumeroExpediteur().getInfobipInfo().getBaseUrl();
         }
-
-        // UsersDetail
-        dto.dateCreationUsersDetail = ud.getDateCreation();
-
-        return dto;
     }
 
-    // Getters
+    // Infos utilisateur
+    if (entity.getUser() != null) {  // Assure-toi que UsersDetail a un champ User
+        this.idUser = entity.getUser().getId();
+        this.username = entity.getUser().getUsername();
+        this.role = entity.getUser().getRole();
+        this.userCreatedAt = entity.getUser().getCreatedAt();
+    }
+}
+    // Méthode statique pour transformer une entité en DTO
+    public static UsersDetailDTO fromEntity(UsersDetail entity) {
+        return new UsersDetailDTO(entity);
+    }
+
+    // ============================
+    // Getters & Setters
+    // ============================
     public Long getIdUtilisateur() { return idUtilisateur; }
-    public String getUsername() { return username; }
-    public String getRole() { return role; }
-    public LocalDateTime getDateCreationUtilisateur() { return dateCreationUtilisateur; }
-    public Long getIdInfobip() { return idInfobip; }
-    public String getApiKey() { return apiKey; }
-    public String getBaseUrl() { return baseUrl; }
+    public void setIdUtilisateur(Long idUtilisateur) { this.idUtilisateur = idUtilisateur; }
+
     public Long getIdNumero() { return idNumero; }
-    public String getValeurNumero() { return valeurNumero; }
-    public LocalDateTime getDateCreationNumero() { return dateCreationNumero; }
-    public LocalDateTime getDateCreationUsersDetail() { return dateCreationUsersDetail; }
+    public void setIdNumero(Long idNumero) { this.idNumero = idNumero; }
+
+    public String getNumeroExpediteur() { return numeroExpediteur; }
+    public void setNumeroExpediteur(String numeroExpediteur) { this.numeroExpediteur = numeroExpediteur; }
+
+    public LocalDateTime getDateCreation() { return dateCreation; }
+    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
+
+    public Long getIdInfobip() { return idInfobip; }
+    public void setIdInfobip(Long idInfobip) { this.idInfobip = idInfobip; }
+
+    public String getApiKey() { return apiKey; }
+    public void setApiKey(String apiKey) { this.apiKey = apiKey; }
+
+    public String getBaseUrl() { return baseUrl; }
+    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    public Long getIdUser() { return idUser; }
+    public void setIdUser(Long idUser) { this.idUser = idUser; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public LocalDateTime getUserCreatedAt() { return userCreatedAt; }
+    public void setUserCreatedAt(LocalDateTime userCreatedAt) { this.userCreatedAt = userCreatedAt; }
+
 }

@@ -12,11 +12,11 @@ import sms.back_end.entity.UsersDetailId;
 @Repository
 public interface UsersDetailRepository extends JpaRepository<UsersDetail, UsersDetailId> {
 
-    // Récupérer tous les détails d’un utilisateur
     List<UsersDetail> findByIdUtilisateur(Long idUtilisateur);
 
-    // Récupérer tous les détails pour un InfobipInfo
-    List<UsersDetail> findByIdInfobip(Long idInfobip);
-     List<UsersDetail> findByUserId(Long userId);
-      Optional<UsersDetail> findByInfobipInfo_NumeroExpediteur_Id(Long idNumero);
+    Optional<UsersDetail> findByIdNumero(Long idNumero);
+
+    Optional<UsersDetail> findByIdUtilisateurAndIdNumero(Long idUtilisateur, Long idNumero);
+
+    Optional<UsersDetail> findByNumeroExpediteur_Id(Long idNumero);
 }

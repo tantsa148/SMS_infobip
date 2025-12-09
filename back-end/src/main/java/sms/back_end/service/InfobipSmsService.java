@@ -1,56 +1,173 @@
 package sms.back_end.service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import sms.back_end.dto.InfobipResponseDTO;
-import sms.back_end.dto.SmsFromUserDetailDTO;
+import sms.back_end.dto.Infobip.InfobipMessageResponseDTO;
+import sms.back_end.dto.Infobip.InfobipStatusDTO;
+import sms.back_end.dto.InfobipInfoDTO;
+import sms.back_end.dto.SmsRequestDTO;
+import sms.back_end.dto.SmsSendResponseDTO;
+import sms.back_end.entity.InfobipInfo;
+import sms.back_end.entity.MessageEnvoye;
+import sms.back_end.entity.NumeroDestinataire;
+import sms.back_end.entity.NumeroExpediteur;
+import sms.back_end.entity.SmsMessage;
+import sms.back_end.repository.MessageEnvoyeRepository;
+import sms.back_end.repository.NumeroDestinataireRepository;
+import sms.back_end.repository.NumeroExpediteurRepository;
 
 @Service
 public class InfobipSmsService {
 
-    public InfobipResponseDTO sendSmsFromDto(SmsFromUserDetailDTO smsDTO) {
+    private final RestTemplate restTemplate;
+    private final NumeroExpediteurRepository numeroExpediteurRepo;
+    private final NumeroDestinataireRepository numeroDestinataireRepo;
+    private final SmsMessageService smsMessageService;
+    private final MessageEnvoyeRepository messageEnvoyeRepo; // <-- injecté
+
+    public InfobipSmsService(RestTemplate restTemplate,
+                             NumeroExpediteurRepository numeroExpediteurRepo,
+                             NumeroDestinataireRepository numeroDestinataireRepo,
+                             SmsMessageService smsMessageService,
+                             MessageEnvoyeRepository messageEnvoyeRepo) {
+        this.restTemplate = restTemplate;
+        this.numeroExpediteurRepo = numeroExpediteurRepo;
+        this.numeroDestinataireRepo = numeroDestinataireRepo;
+        this.smsMessageService = smsMessageService;
+        this.messageEnvoyeRepo = messageEnvoyeRepo; // <-- important !
+    }
+
+    public SmsSendResponseDTO sendSms(SmsRequestDTO dto) {
+        SmsSendResponseDTO responseDTO = new SmsSendResponseDTO();
+
         try {
-            WebClient client = WebClient.builder()
-                    .baseUrl("https://" + smsDTO.getBaseUrl())
-                    .defaultHeader(HttpHeaders.AUTHORIZATION, "App " + smsDTO.getApiKey())
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                    .build();
+            // 1️⃣ Charger entités
+            NumeroExpediteur expediteur = numeroExpediteurRepo.findById(dto.getIdNumeroExpediteur())
+                    .orElseThrow(() -> new RuntimeException("Numéro expéditeur introuvable"));
 
-            String jsonPayload = "{ \"messages\": [ { " +
-                    "\"from\": \"" + smsDTO.getFrom() + "\", " +
-                    "\"destinations\": [{ \"to\": \"" + smsDTO.getTo() + "\" }], " +
-                    "\"text\": \"" + smsDTO.getMessage() + "\" } ] }";
+            NumeroDestinataire destinataire = numeroDestinataireRepo.findById(dto.getIdNumeroDestinataire())
+                    .orElseThrow(() -> new RuntimeException("Numéro destinataire introuvable"));
 
-            String rawResponse = client.post()
-                    .uri("/sms/2/text/advanced")
-                    .bodyValue(jsonPayload)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            SmsMessage smsMessage = smsMessageService.getMessageById(dto.getIdMessage())
+                    .orElseThrow(() -> new RuntimeException("Message introuvable"));
 
-            // Parser le JSON
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(rawResponse);
-            JsonNode msg = root.path("messages").get(0);
+            InfobipInfo infobip = expediteur.getInfobipInfo();
+            String url = "https://" + infobip.getBaseUrl() + "/sms/2/text/advanced";
 
-            InfobipResponseDTO response = new InfobipResponseDTO();
-            response.setMessageId(msg.path("messageId").asText());
-            response.setTo(msg.path("to").asText());
-            response.setStatusName(msg.path("status").path("name").asText());
-            response.setStatusDescription(msg.path("status").path("description").asText());
+            // 2️⃣ Headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "App " + infobip.getApiKey());
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON)); // <-- réponse JSON
 
-            return response;
+            // 3️⃣ Body JSON
+            Map<String, Object> destination = new HashMap<>();
+            destination.put("to", destinataire.getValeur());
 
-        } catch (WebClientResponseException ex) {
-            throw new RuntimeException("Erreur Infobip : " + ex.getResponseBodyAsString());
-        } catch (Exception ex) {
-            throw new RuntimeException("Erreur inattendue : " + ex.getMessage());
+            Map<String, Object> messageObj = new HashMap<>();
+            messageObj.put("from", expediteur.getValeur());
+            messageObj.put("destinations", List.of(destination));
+            messageObj.put("text", smsMessage.getTexte());
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("messages", List.of(messageObj));
+
+            // 4️⃣ Logs
+            System.out.println("===== ENVOI SMS =====");
+            System.out.println("FROM: " + expediteur.getValeur());
+            System.out.println("TO  : " + destinataire.getValeur());
+            System.out.println("TEXT: " + smsMessage.getTexte());
+            System.out.println("=====================");
+
+            // 5️⃣ Envoi HTTP
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    url,
+                    new HttpEntity<>(body, headers),
+                    String.class
+            );
+
+            String responseBody = response.getBody();
+            System.out.println("=== BODY INFOBIP === " + responseBody);
+
+            // 6️⃣ Parser JSON
+            if (responseBody != null && responseBody.trim().startsWith("{")) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode root = objectMapper.readTree(responseBody);
+                JsonNode messagesNode = root.path("messages");
+
+                if (messagesNode.isArray() && messagesNode.size() > 0) {
+                    JsonNode firstMessage = messagesNode.get(0);
+
+                    InfobipMessageResponseDTO infobipResponse = new InfobipMessageResponseDTO();
+                    infobipResponse.setMessageId(firstMessage.path("messageId").asText());
+                    infobipResponse.setTo(firstMessage.path("to").asText());
+
+                    JsonNode statusNode = firstMessage.path("status");
+                    if (!statusNode.isMissingNode()) {
+                        InfobipStatusDTO status = new InfobipStatusDTO();
+                        status.setGroupId(statusNode.path("groupId").asInt());
+                        status.setGroupName(statusNode.path("groupName").asText());
+                        status.setId(statusNode.path("id").asInt());
+                        status.setName(statusNode.path("name").asText());
+                        status.setDescription(statusNode.path("description").asText());
+
+                        infobipResponse.setStatus(status);
+
+                        responseDTO.setStatut(status.getName());
+                        responseDTO.setDescription(status.getDescription());
+                    }
+
+                    responseDTO.setInfobipResponse(infobipResponse);
+
+                    // 7️⃣ Enregistrer dans la table message_envoye
+                    MessageEnvoye messageEnvoye = new MessageEnvoye();
+                    messageEnvoye.setIdNumeroExpediteur(expediteur.getId());
+                    messageEnvoye.setIdNumeroDestinataire(destinataire.getIdNumero());
+                    messageEnvoye.setIdMessage(smsMessage.getId());
+                    messageEnvoye.setInfobipMessageId(infobipResponse.getMessageId());
+
+                    messageEnvoyeRepo.save(messageEnvoye);
+                }
+            }
+
+            // 8️⃣ Remplir DTO général
+            responseDTO.setIdNumeroExpediteur(expediteur.getId());
+            responseDTO.setNumeroExpediteur(expediteur.getValeur());
+            responseDTO.setIdNumeroDestinataire(destinataire.getIdNumero());
+            responseDTO.setNumeroDestinataire(destinataire.getValeur());
+            responseDTO.setIdMessage(smsMessage.getId());
+            responseDTO.setMessage(smsMessage.getTexte());
+            responseDTO.setInfobipInfo(new InfobipInfoDTO(infobip));
+
+        } catch (HttpClientErrorException e) {
+            System.err.println("=== ERREUR INFOBIP ===");
+            System.err.println("Status: " + e.getStatusCode());
+            System.err.println("Body: " + e.getResponseBodyAsString());
+
+            responseDTO.setStatut("ERROR");
+            responseDTO.setDescription(e.getResponseBodyAsString());
+
+        } catch (Exception e) {
+            System.err.println("=== ERREUR GÉNÉRALE ===");
+            e.printStackTrace();
+
+            responseDTO.setStatut("ERROR");
+            responseDTO.setDescription(e.getMessage());
         }
+
+        return responseDTO;
     }
 }

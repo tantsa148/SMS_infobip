@@ -5,29 +5,21 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import sms.back_end.entity.InfobipInfo;
-import sms.back_end.entity.NumeroExpediteur;
 import sms.back_end.exception.NotFoundException;
 import sms.back_end.repository.InfobipInfoRepository;
-import sms.back_end.repository.NumeroExpediteurRepository;
 
 @Service
 public class InfobipInfoService {
 
     private final InfobipInfoRepository repository;
-    private final NumeroExpediteurRepository numeroRepo;
 
-    public InfobipInfoService(InfobipInfoRepository repository, NumeroExpediteurRepository numeroRepo) {
+    public InfobipInfoService(InfobipInfoRepository repository) {
         this.repository = repository;
-        this.numeroRepo = numeroRepo;
     }
 
     // CREATE
-    public InfobipInfo createInfobipInfo(InfobipInfo info, Long idNumero) {
-        if (idNumero != null) {
-            NumeroExpediteur numero = numeroRepo.findById(idNumero)
-                    .orElseThrow(() -> new NotFoundException("Numéro expéditeur introuvable : " + idNumero));
-            info.setNumeroExpediteur(numero);
-        }
+    public InfobipInfo createInfobipInfo(InfobipInfo info) {
+        // Pas besoin de gérer les numéros ici
         return repository.save(info);
     }
 
@@ -43,19 +35,14 @@ public class InfobipInfoService {
     }
 
     // UPDATE
-    public InfobipInfo update(Long id, InfobipInfo updated, Long idNumero) {
+    public InfobipInfo update(Long id, InfobipInfo updated) {
         InfobipInfo info = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Impossible de mettre à jour : ID introuvable " + id));
 
         info.setApiKey(updated.getApiKey());
         info.setBaseUrl(updated.getBaseUrl());
 
-        if (idNumero != null) {
-            NumeroExpediteur numero = numeroRepo.findById(idNumero)
-                    .orElseThrow(() -> new NotFoundException("Numéro expéditeur introuvable : " + idNumero));
-            info.setNumeroExpediteur(numero);
-        }
-
+        // Pas de gestion des numéros ici
         return repository.save(info);
     }
 

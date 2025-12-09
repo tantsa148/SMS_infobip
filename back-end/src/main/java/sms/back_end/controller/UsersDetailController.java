@@ -15,26 +15,27 @@ import sms.back_end.entity.UsersDetail;
 import sms.back_end.service.UsersDetailService;
 
 @RestController
-@RequestMapping("/users-detail")
+@RequestMapping("/api/users-detail")
 public class UsersDetailController {
 
     private final UsersDetailService usersDetailService;
-
 
     public UsersDetailController(UsersDetailService usersDetailService) {
         this.usersDetailService = usersDetailService;
     }
 
-
+    // CREATE
     @PostMapping
-    public UsersDetail createUsersDetail(
+    public UsersDetailDTO createUsersDetail(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody UsersDetailRequest request) {
 
         String token = authHeader.replace("Bearer ", "");
-        return usersDetailService.createUserDetail(token, request.getIdInfobip());
+        UsersDetail created = usersDetailService.createUserDetail(token, request.getIdNumero());
+        return UsersDetailDTO.fromEntity(created);
     }
-   
+
+    // READ ALL pour l'utilisateur connecté
     @GetMapping
     public List<UsersDetailDTO> getAllUsersDetail(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");

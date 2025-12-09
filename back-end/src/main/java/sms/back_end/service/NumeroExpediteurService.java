@@ -5,9 +5,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import sms.back_end.entity.InfobipInfo;
 import sms.back_end.entity.NumeroExpediteur;
 import sms.back_end.exception.BadRequestException;
 import sms.back_end.exception.NotFoundException;
+import sms.back_end.repository.InfobipInfoRepository;
 import sms.back_end.repository.NumeroExpediteurRepository;
 
 @Service
@@ -15,24 +17,35 @@ public class NumeroExpediteurService {
 
     private final NumeroExpediteurRepository repository;
 
-    public NumeroExpediteurService(NumeroExpediteurRepository repository) {
+    private final InfobipInfoRepository infobipInfoRepository;
+
+    public NumeroExpediteurService(NumeroExpediteurRepository repository, InfobipInfoRepository infobipInfoRepository) {
         this.repository = repository;
+        this.infobipInfoRepository = infobipInfoRepository;
     }
 
     // CREATE
-    public NumeroExpediteur createNumero(NumeroExpediteur numero) {
-
-        if (numero.getValeur() == null || numero.getValeur().isBlank()) {
-            throw new BadRequestException("Le numéro expéditeur ne peut pas être vide.");
-        }
-
-        if (repository.findByValeur(numero.getValeur()).isPresent()) {
-            throw new BadRequestException("Ce numéro expéditeur existe déjà.");
-        }
-
-        numero.setDateCreation(LocalDateTime.now());
-        return repository.save(numero);
+    public NumeroExpediteur createNumero(NumeroExpediteur numero, Long idInfobip) {
+    if (numero.getValeur() == null || numero.getValeur().isBlank()) {
+        throw new BadRequestException("Le numéro expéditeur ne peut pas être vide.");
     }
+
+    if (repository.findByValeur(numero.getValeur()).isPresent()) {
+        throw new BadRequestException("Ce numéro expéditeur existe déjà.");
+    }
+
+    numero.setDateCreation(LocalDateTime.now());
+
+    // Associer l'API Key si idInfobip fourni
+    if (idInfobip != null) {
+        InfobipInfo info = infobipInfoRepository.findById(idInfobip)
+                .orElseThrow(() -> new NotFoundException("InfobipInfo introuvable pour l'ID : " + idInfobip));
+        numero.setInfobipInfo(info);
+    }
+
+    return repository.save(numero);
+}
+
 
     // READ ALL
     public List<NumeroExpediteur> getAllNumeros() {
@@ -54,16 +67,20 @@ public class NumeroExpediteurService {
     }
 
     // UPDATE
-    public NumeroExpediteur updateNumero(Long id, NumeroExpediteur updated) {
+public NumeroExpediteur updateNumero(Long id, NumeroExpediteur updated, Long idInfobip) {
+    NumeroExpediteur numero = repository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Impossible de mettre à jour : ID introuvable " + id));
 
-        NumeroExpediteur numero = repository.findById(id)
-                .orElseThrow(() ->
-                        new NotFoundException("Impossible de mettre à jour : ID introuvable " + id));
+    numero.setValeur(updated.getValeur());
 
-        numero.setValeur(updated.getValeur());
-
-        return repository.save(numero);
+    if (idInfobip != null) {
+        InfobipInfo info = infobipInfoRepository.findById(idInfobip)
+                .orElseThrow(() -> new NotFoundException("InfobipInfo introuvable pour l'ID : " + idInfobip));
+        numero.setInfobipInfo(info);
     }
+
+    return repository.save(numero);
+}
 
     // DELETE
     public void deleteNumero(Long id) {

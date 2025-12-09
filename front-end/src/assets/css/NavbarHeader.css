@@ -1,0 +1,416 @@
+/* NavbarHeader.css */
+.navbar-header {
+  position: fixed;
+  top: 0;
+  left: 250px;
+  width: calc(100% - 250px);
+  height: 60px;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* <- ajoute ceci */
+  padding: 0 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+/* NOUVEAUX STYLES - Groupe solde + utilisateur */
+
+
+.twilio-balance-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.twilio-balance {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fff;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.twilio-balance:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.balance-icon {
+  font-size: 1.25rem;
+  color: #3f4d48;
+}
+
+.balance-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.balance-amount {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.balance-currency {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.vertical-separator {
+  width: 1px;
+  height: 24px;
+  background-color: #d1d5db;
+  margin: 0 0.25rem;
+}
+
+/* Styles existants pour user-actions */
+.user-actions {
+  margin-left: auto;
+}
+
+.notif-container, .user-profile {
+  position: relative;
+}
+
+.notif-btn, .user-btn {
+  position: relative;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.notif-btn:hover, .user-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #6c757d;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.25rem;
+  border-radius: 999px;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Styles pour le menu utilisateur */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-info {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  font-size: 2rem;
+  color: #6b7280;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-name {
+  margin: 0;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.user-menu {
+  padding: 0.5rem 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+  gap: 0.75rem;
+}
+
+.menu-item:hover {
+  background-color: #f8fafc;
+  color: #1f2937;
+}
+
+.menu-item i {
+  width: 16px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.menu-item.logout {
+  color: #ef4444;
+}
+
+.menu-item.logout:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #f1f5f9;
+  margin: 0.5rem 0;
+}
+
+/* NOUVEAUX STYLES POUR LE BOUTON UTILISATEUR */
+.user-btn {
+  position: relative;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  color: #374151;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.user-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.user-icon {
+  font-size: 1rem;
+  color: #6b7280;
+}
+
+.username {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dropdown-arrow {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.rotate {
+  transform: rotate(180deg);
+}
+
+/* Version compacte (optionnelle) */
+.compact-user-group {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 1px solid rgba(209, 213, 219, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-left: auto;
+}
+
+.compact-balance {
+  position: relative;
+}
+
+.compact-balance::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  width: 1px;
+  background-color: #e5e7eb;
+}
+
+.balance-chip {
+  padding: 6px 12px;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  color: #505e5a;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.balance-chip i {
+  color: #6d8b81;
+}
+
+.currency {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+.user-toggle {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #374151;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.user-toggle:hover {
+  background-color: rgba(243, 244, 246, 0.8);
+  border-color: #d1d5db;
+  border-radius: 8px;
+}
+
+.user-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  margin-right: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-header {
+    left: 0;
+    width: 100%;
+  }
+  
+  .user-balance-group {
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .twilio-balance {
+    padding: 0.5rem;
+  }
+  
+  .balance-amount {
+    font-size: 0.9rem;
+  }
+  
+  .username {
+    display: none;
+  }
+  
+  .user-btn {
+    padding: 0.5rem;
+  }
+  
+  .search-input {
+    width: 150px;
+  }
+  
+  .compact-user-group {
+    padding: 3px;
+  }
+  
+  .balance-chip {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .user-toggle {
+    padding: 5px 10px;
+  }
+  
+  .user-avatar-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar-header {
+    padding: 0 0.5rem;
+    height: 56px;
+  }
+  
+  .user-balance-group {
+    gap: 0.75rem;
+  }
+  
+  .twilio-balance {
+    gap: 0.5rem;
+  }
+  
+  .balance-icon {
+    font-size: 1rem;
+  }
+  
+  .balance-amount {
+    font-size: 0.85rem;
+  }
+  
+  .balance-currency {
+    font-size: 0.7rem;
+  }
+  
+  .search-input {
+    width: 120px;
+  }
+  
+  .compact-user-group {
+    gap: 0.5rem;
+  }
+  
+  .balance-chip span:last-child {
+    display: none;
+  }
+}
