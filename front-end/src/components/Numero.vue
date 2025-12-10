@@ -28,15 +28,52 @@
           </div>
         </div>
 
-        <!-- Sélecteur plateforme -->
+        <!-- Zone de texte pour l'API Key -->
         <div class="form-group">
-          <label for="plateforme">Plateforme :</label>
-          <select v-model="selectedPlateformeId" class="platform-select" required>
-            <option value="">-- Sélectionnez une plateforme --</option>
-            <option v-for="p in plateformes" :key="p.id" :value="p.id">
-              {{ p.nomPlateforme }}
-            </option>
-          </select>
+          <label for="apiKey">Clé API Infobip :</label>
+          <input
+            type="password"
+            id="apiKey"
+            v-model="apiKey"
+            placeholder="Saisissez votre clé API Infobip"
+            required
+            class="form-control"
+          />
+          <small class="form-text text-muted">
+            La clé API est nécessaire pour valider le numéro
+          </small>
+        </div>
+
+        <!-- Zone de texte pour l'URL de base Infobip -->
+        <div class="form-group">
+          <label for="baseUrl">URL de base Infobip :</label>
+          <input
+            type="text"
+            id="baseUrl"
+            v-model="baseUrl"
+            placeholder="https://api.infobip.com"
+            required
+            class="form-control"
+          />
+          <small class="form-text text-muted">
+            URL du serveur Infobip (ex: https://api.infobip.com)
+          </small>
+          
+          <!-- Suggestions d'URL si disponibles -->
+          <div v-if="urlSuggestions.length > 0" class="suggestions-container">
+            <small>URLs disponibles :</small>
+            <div class="suggestions">
+              <button
+                type="button"
+                v-for="url in urlSuggestions"
+                :key="url"
+                @click="selectUrlSuggestion(url)"
+                class="suggestion-btn"
+              >
+                {{ url }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Boutons -->
@@ -57,7 +94,7 @@
     </div>
   </div>
 
-  <!-- MODALE DE CONFIRMATION (séparée, pas imbriquée) -->
+  <!-- MODALE DE CONFIRMATION -->
   <div class="modal-overlay" v-if="showConfirm" @click.self="closeConfirmModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -67,14 +104,15 @@
         <p>Voulez-vous vraiment ajouter ce numéro ?</p>
         <ul>
           <li><strong>Numéro :</strong> {{ fullNumero }}</li>
-          <li><strong>Plateforme :</strong> {{ selectedPlateformeName }}</li>
+          <li><strong>URL Infobip :</strong> {{ baseUrl }}</li>
+          <li><strong>Clé API :</strong> {{ maskedApiKey }}</li>
         </ul>
-        
-        <!-- Message d'erreur -->
+
         <div v-if="responseMessage" class="alert alert-danger mt-3">
           {{ responseMessage }}
         </div>
       </div>
+
       <div class="modal-footer">
         <button class="btn-cancel" @click="closeConfirmModal" :disabled="adding">
           Annuler
@@ -89,41 +127,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineProps, defineEmits } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 import countriesData from '../assets/countries.json' with { type: 'json' }
-import { fetchPlateformes } from '../services/plateformeService'
+
+import UsersDetailService from '../services/usersDetailService'
 import NumeroExpediteurService from '../services/numeroExpediteurService'
-import NumeroDestinataireService from '../services/numeroDestinataireService'
-import type { Plateforme } from '../types/Plateforme'
+import type { UsersDetail } from '../types/UsersDetail'
 
-const route = useRoute()
-const isDestinataire = computed(() => route.path.includes('/destinataire'))
-
-// Props et emits
+// Props & Emits
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'numero-added', value: any): void
 }>()
 
-// Variables
+// Données
 const countries = ref(countriesData)
 countries.value.sort((a, b) => a.name.localeCompare(b.name))
 
 const selectedCountryCode = ref('+33')
 const numeroLocal = ref('')
-
-const plateformes = ref<Plateforme[]>([])
-const selectedPlateformeId = ref<number | ''>('')
+const apiKey = ref('')
+const baseUrl = ref('')  // Changé de selectedBaseUrl à baseUrl
+const infobips = ref<UsersDetail[]>([])
 
 const showConfirm = ref(false)
 const adding = ref(false)
 const responseMessage = ref<string | null>(null)
 
+// Suggestions d'URL uniques
+const urlSuggestions = computed(() => {
+  if (!infobips.value || infobips.value.length === 0) return []
+  
+  // Extraire les URLs uniques
+  const urls = infobips.value
+    .filter(item => item?.baseUrl && item.baseUrl.trim() !== '')
+    .map(item => item.baseUrl)
+  
+  // Supprimer les doublons
+  return [...new Set(urls)]
+})
+
 // Validation
 const isFormValid = computed(() =>
-  numeroLocal.value.trim().length > 0 && selectedPlateformeId.value !== ''
+  numeroLocal.value.trim().length > 0 && 
+  apiKey.value.trim().length > 0 && 
+  baseUrl.value.trim() !== ''
 )
 
 // Numéro complet
@@ -132,44 +181,67 @@ const fullNumero = computed(() => {
   return local ? `${selectedCountryCode.value}${local}` : ''
 })
 
-// Nom de la plateforme sélectionnée
-const selectedPlateformeName = computed(() => {
-  const p = plateformes.value.find(p => p.id === selectedPlateformeId.value)
-  return p ? p.nomPlateforme : ''
+// Masquer la clé API pour l'affichage
+const maskedApiKey = computed(() => {
+  if (!apiKey.value) return ''
+  const length = apiKey.value.length
+  if (length <= 8) return '••••••••'
+  return `${apiKey.value.substring(0, 4)}${'•'.repeat(Math.min(8, length - 4))}${apiKey.value.substring(length - 4)}`
 })
 
-// Chargement des plateformes
+// Sélectionner une suggestion d'URL
+const selectUrlSuggestion = (url: string) => {
+  baseUrl.value = url
+}
+
+// Charger les comptes Infobip
 onMounted(async () => {
   try {
-    plateformes.value = await fetchPlateformes()
+    infobips.value = await UsersDetailService.getAll()
+    
+    // Pré-remplir avec la première URL disponible si le champ est vide
+    if (baseUrl.value === '' && infobips.value.length > 0) {
+      const firstInfobip = infobips.value[0]
+      if (firstInfobip && firstInfobip.baseUrl) {
+        baseUrl.value = firstInfobip.baseUrl
+      }
+    }
   } catch (err) {
-    console.error('Erreur chargement plateformes:', err)
+    console.error('Erreur chargement infobip:', err)
   }
 })
 
-// Fermeture modal principal
+// Fermer modal principal
 const closeModal = () => {
   emit('update:show', false)
   resetForm()
 }
 
-// Fermeture modal de confirmation
+// Fermer confirmation
 const closeConfirmModal = () => {
   showConfirm.value = false
   responseMessage.value = null
 }
 
+// Reset form
 const resetForm = () => {
   numeroLocal.value = ''
-  selectedPlateformeId.value = ''
+  apiKey.value = ''
   selectedCountryCode.value = '+33'
   responseMessage.value = null
+  
+  // Réinitialiser l'URL avec la première suggestion disponible
+  if (urlSuggestions.value.length > 0) {
+    baseUrl.value = urlSuggestions.value[0]
+  } else {
+    baseUrl.value = ''
+  }
 }
 
-// Soumission formulaire
+// Soumission form
 const handleSubmit = () => {
   if (!isFormValid.value) return
-  responseMessage.value = null // Réinitialiser les erreurs
+  responseMessage.value = null
   showConfirm.value = true
 }
 
@@ -179,36 +251,23 @@ const confirmAdd = async () => {
   responseMessage.value = null
 
   try {
-    let newNumero
-
-    if (isDestinataire.value) {
-      // Destinataire
-      const dataDestinataire = {
-        valeur: fullNumero.value,
-        plateformeId: selectedPlateformeId.value as number
+    const data = {
+      valeur: fullNumero.value,
+      infobipInfo: {
+        apiKey: apiKey.value.trim(),
+        baseUrl: baseUrl.value.trim()
       }
-      newNumero = await NumeroDestinataireService.addNumero(dataDestinataire)
-      
-    } else {
-      // Expéditeur
-      const dataExpediteur = {
-        valeur: fullNumero.value,
-        idPlateforme: selectedPlateformeId.value as number
-      }
-      newNumero = await NumeroExpediteurService.add(dataExpediteur)
     }
 
-    // Émettre l'événement vers le parent
+    const newNumero = await NumeroExpediteurService.add(data)
+
     emit('numero-added', newNumero)
 
-    // Fermer les modales
     showConfirm.value = false
     closeModal()
   } catch (err: any) {
     console.error('Erreur ajout numéro:', err)
     responseMessage.value = err.response?.data?.message || err.message || 'Erreur inconnue'
-    
-    // Ne pas fermer la modale en cas d'erreur, laisser l'utilisateur corriger
   } finally {
     adding.value = false
   }
@@ -216,106 +275,58 @@ const confirmAdd = async () => {
 </script>
 
 <style scoped>
-/* Styles identiques à ton modal actuel */
-.modal-overlay { 
-  position: fixed; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.5); 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  z-index: 1050; 
-}
-.modal-content { 
-  background: #fff; 
-  border-radius: 6px; 
-  max-width: 450px; 
-  width: 100%; 
-  padding: 1rem; 
-  margin: 1rem;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.modal-header, .modal-footer { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-}
-.btn-cancel { 
-  background: #ccc; 
-  border: none; 
-  padding: 0.5rem 1rem; 
-  border-radius: 4px; 
-  cursor: pointer; 
-}
-.btn-submit { 
-  background: #007bff; 
-  color: white; 
-  border: none; 
-  padding: 0.5rem 1rem; 
-  border-radius: 4px; 
-  cursor: pointer; 
-}
-.btn-disabled, .btn-submit:disabled, .btn-cancel:disabled { 
-  opacity: 0.5; 
-  cursor: not-allowed; 
-}
-.phone-input-wrapper { 
-  display: flex; 
-  border: 1px solid #d1d5db; 
-  border-radius: 8px; 
-  overflow: hidden; 
-  background: #fff; 
-}
-.country-select { 
-  appearance: none; 
-  background: #f8fafc; 
-  border: none; 
-  padding: 0.5rem 0.75rem; 
-  font-size: 1rem; 
-  font-weight: 600; 
-  width: 120px; 
-  cursor: pointer; 
-  position: relative; 
-}
-.phone-input { 
-  flex: 1; 
-  border: none; 
-  padding: 0.5rem 0.75rem; 
-  font-size: 1rem; 
-}
-.phone-input:focus { 
-  outline: none; 
-}
-.platform-select { 
-  width: 100%; 
-  padding: 0.5rem 0.75rem; 
-  font-size: 1rem; 
-  border-radius: 8px; 
-  border: 1px solid #d1d5db; 
-  background: #fff; 
-  appearance: none; 
-  cursor: pointer; 
-  font-weight: 600; 
-}
-.platform-select:focus { 
-  outline: none; 
-  border-color: #0d6efd; 
-  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); 
-}
+/* Styles existants... */
 
-/* Style pour le spinner */
-.spinner-border-sm {
-  margin-right: 0.5rem;
-  vertical-align: middle;
-}
-
-.alert {
-  margin: 0;
-  padding: 0.5rem 1rem;
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
   border-radius: 4px;
+  font-size: 14px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.form-text {
+  display: block;
+  margin-top: 4px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.suggestions-container {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.suggestion-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.suggestion-btn:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.suggestion-btn:active {
+  transform: scale(0.95);
 }
 </style>

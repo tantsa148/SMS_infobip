@@ -77,7 +77,13 @@
       </div>
     </div>
 
-    <!-- MODAL D'AJOUT -->
+  <!-- MODAL D'AJOUT -->
+  <AddNumeroModal
+    :show="showAddModal"
+    @update:show="showAddModal = $event"
+    @numero-added="handleNumeroAdded"
+  />
+
     
   </div>
 </template>
@@ -87,6 +93,7 @@ import { ref, onMounted } from 'vue'
 import '../assets/css/numero-form.css'
 import UsersDetailService from '../services/usersDetailService'
 import type { UsersDetail } from '../types/UsersDetail'
+import AddNumeroModal from '../components/Numero.vue'
 
 const numeros = ref<UsersDetail[]>([])
 
@@ -105,7 +112,23 @@ const fetchData = async () => {
     loading.value = false
   }
 }
+
 // 🔹 Gérer l'ajout depuis le modal et afficher le message
+// Fonction appelée quand un numéro est ajouté
+const handleNumeroAdded = (newNumero: any) => {
+  // Recharger la liste après ajout
+  fetchData()
+
+  // Message de succès
+  apiMessage.value = 'Numéro ajouté avec succès !'
+
+  // Effacer le message après 3s
+  if (timeoutId) clearTimeout(timeoutId)
+  timeoutId = setTimeout(() => {
+    apiMessage.value = ''
+  }, 3000)
+}
+
 
 function formatDate(date: string) {
   return new Date(date).toLocaleString()

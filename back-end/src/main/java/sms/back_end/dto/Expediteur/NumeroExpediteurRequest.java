@@ -1,14 +1,25 @@
 package sms.back_end.dto.Expediteur;
 
-public class NumeroExpediteurRequest {
+import sms.back_end.entity.InfobipInfo;
 
-    private String valeur; // Le numéro
-    private Long idInfobip; // Optionnel : ID de l'InfobipInfo
+public class NumeroExpediteurRequest {
+    private String valeur;  // Obligatoire
+    private InfobipInfo infobipInfo;  // Nouveau : objet complet au lieu de Long idInfobip
 
     // Getters et setters
-    public String getValeur() { return valeur; }
-    public void setValeur(String valeur) { this.valeur = valeur; }
+    public String getValeur() {
+        return valeur;
+    }
 
-    public Long getIdInfobip() { return idInfobip; }
-    public void setIdInfobip(Long idInfobip) { this.idInfobip = idInfobip; }
+    public void setValeur(String valeur) {
+        this.valeur = valeur;
+    }
+
+    public InfobipInfo getInfobipInfo() {
+        return infobipInfo;
+    }
+
+    public void setInfobipInfo(InfobipInfo infobipInfo) {
+        this.infobipInfo = infobipInfo;
+    }
 }

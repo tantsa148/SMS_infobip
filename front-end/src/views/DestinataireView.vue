@@ -1,5 +1,6 @@
 <template>
   <div class="container mt-5">
+
     <!-- LOADING -->
     <div v-if="loading" class="text-center">
       <div class="spinner-border text-primary" role="status">
@@ -8,36 +9,28 @@
       <p class="mt-2 text-muted">Chargement de vos numéros...</p>
     </div>
 
-    <!-- NOTIFICATION FIXE À DROITE -->
+    <!-- NOTIFICATION -->
     <div v-if="apiMessage" class="fixed-notification">
       <div class="notification-content">
         <div class="notification-header">
           <span class="notification-title"></span>
-          <button class="notification-close" @click="apiMessage = ''">
-            &times;
-          </button>
+          <button class="notification-close" @click="apiMessage = ''">&times;</button>
         </div>
-        <div class="notification-body">
-          {{ apiMessage }}
-        </div>
+        <div class="notification-body">{{ apiMessage }}</div>
       </div>
     </div>
 
-    <!-- CARD -->
+    <!-- CARD: NUMEROS -->
     <div v-else class="card shadow">
       <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title mb-0">Numéros Enregistrés</div>
-        <button 
-          class="btn btn-primary btn-sm"
-          style="width: 100px"
-          @click="showAddModal = true"
-        >
+        <button class="btn btn-primary btn-sm" style="width: 100px" @click="showAddModal = true">
           Ajouter
         </button>
       </div>
 
       <div class="card-body">
-        <!-- AUCUN NUMÉRO -->
+        <!-- AUCUN NUMERO -->
         <div v-if="numeros.length === 0" class="text-center py-4">
           <div class="text-muted mb-3">📱</div>
           <p class="text-muted mb-2">Aucun numéro trouvé</p>
@@ -50,79 +43,128 @@
               <tr>
                 <th>#</th>
                 <th>Numéro</th>
-                <th>Plateforme</th>
                 <th>Créé le</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(row, index) in numeros" :key="row.id">
+              <tr v-for="(row, index) in numeros" :key="row.idNumero">
                 <td>{{ index + 1 }}</td>
                 <td>{{ row.valeur }}</td>
-                <td>{{ row.plateformes.length > 0 ? row.plateformes.join(', ') : '-' }}</td>
                 <td>{{ formatDate(row.dateCreation) }}</td>
+                <td class="d-flex gap-2">
+                  <button
+                    class="btn btn-outline-secondary btn-sm"
+                    title="Send Message"
+                    @click="openSendModal(row)"
+                  >
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- FOOTER -->
       <div v-if="numeros.length > 0" class="card-footer">
         <small class="text-muted">Total : {{ numeros.length }} numéro(s)</small>
       </div>
     </div>
 
-    <!-- MODAL D'AJOUT -->
-    <AddNumeroModal
+    <!-- MODAL AJOUT -->
+    <ModalAddNumero
       :show="showAddModal"
-      @update:show="showAddModal = $event"
-      @numero-added="handleNumeroAdded"
+      @close="showAddModal = false"
+      @submit="handleAddNumero"
     />
+
+    <!-- MODAL ENVOYER MESSAGE -->
+    <ModalSendMessage
+      :show="showSendModal"
+      :numeroFromParent="selectedNumero"
+      @close="showSendModal = false"
+      @send="handleSendMessage"
+    />
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import numeroDestinataireService from '../services/numeroDestinataireService'
-import AddNumeroModal from '../components/Numero.vue'
 import type { NumeroDestinataire } from '../types/NumeroDestinataire'
-import '../assets/css/numero-form.css'
+import ModalAddNumero from '../components/AddNumeroDestinataireModal.vue'
+import ModalSendMessage from '../components/ModalSendMessage.vue'
+import "../assets/css/destinataire.css"
 
 const loading = ref(true)
 const numeros = ref<NumeroDestinataire[]>([])
 const showAddModal = ref(false)
 const apiMessage = ref('')
-let timeoutId:number | null = null
 
+// Modal envoyer message
+const showSendModal = ref(false)
+const selectedNumero = ref<NumeroDestinataire | null>(null)
+
+let timeoutId: number | null = null
+
+// Charger les numéros
 const fetchData = async () => {
   try {
     const response = await numeroDestinataireService.getAll()
     numeros.value = response.data
   } catch (err) {
     console.error('Erreur chargement des numéros :', err)
+    showNotification('Erreur lors du chargement des numéros', 'error')
   } finally {
     loading.value = false
   }
-}
-
-const handleNumeroAdded = (newNumero: NumeroDestinataire) => {
-  numeros.value.push(newNumero)
-
-  apiMessage.value = newNumero.message || "added"
-  
-  if (timeoutId) {
-    clearTimeout(timeoutId)
-  }
-
-  timeoutId = setTimeout(() =>{
-    apiMessage.value = ''
-  },3000)
 }
 
 function formatDate(date: string) {
   return new Date(date).toLocaleString()
 }
 
+// Notification
+const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+  apiMessage.value = message
+  if (timeoutId) clearTimeout(timeoutId)
+  timeoutId = setTimeout(() => apiMessage.value = '', 5000)
+}
+
+// Ajouter numéro
+const handleAddNumero = async (numeroComplet: string) => {
+  try {
+    const data = { valeur: numeroComplet }
+    const newNumeroAdded = await numeroDestinataireService.addNumero(data)
+    numeros.value.unshift(newNumeroAdded)
+    showNotification(`Numéro ${numeroComplet} ajouté avec succès`, 'success')
+    showAddModal.value = false
+  } catch (err: any) {
+    console.error('Erreur ajout numéro:', err)
+    let errorMsg = 'Erreur lors de l\'ajout du numéro'
+    if (err.response?.data?.message) errorMsg = err.response.data.message
+    else if (err.message) errorMsg = err.message
+    showNotification(errorMsg, 'error')
+  }
+}
+
+// Envoyer message depuis le modal
+const handleSendMessage = (payload: {
+  idNumeroExpediteur: number
+  numeroDestinataire: string
+  message: string
+}) => {
+  console.log('Données à envoyer :', payload)
+  showNotification('Message envoyé !', 'success')
+}
+
+// Ouvrir modal envoyer message
+const openSendModal = (numero: NumeroDestinataire) => {
+  selectedNumero.value = numero
+  showSendModal.value = true
+}
+
 onMounted(fetchData)
 </script>
-
