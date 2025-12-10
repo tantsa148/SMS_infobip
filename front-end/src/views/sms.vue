@@ -3,9 +3,9 @@
 
     <!-- FORMULAIRE -->
     <form @submit.prevent="openModal">
-      <!-- SELECT NUMERO DESTINATAIRE -->
+      <!-- SELECT NUMERO expediteur -->
       <div class="mb-3">
-        <label class="form-label">Numéro destinataire</label>
+        <label class="form-label">Numéro Expediteur</label>
         <select v-model="selectedNumero" class="form-select" required>
           <option disabled value="">-- Choisir un numéro --</option>
           <option 
