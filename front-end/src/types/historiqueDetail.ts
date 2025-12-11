@@ -1,14 +1,31 @@
+// types/historiqueDetail.ts
 export interface historiqueDetail {
-  logId: number
-  utilisateur: string
-  expediteurNumero: string
-  destinataireNumero: string
-  messageTexte: string
-  status: string
-  twilioErrorCode: number | null
-  twilioErrorMessage: string | null
-  twilioErrorMoreInfo: string | null
-  twilioSid: string | null
-  createdAt: string
-  platform: string | null
+  messageId: string
+  to: string
+  from: string
+  text: string
+  sentAt: string
+  doneAt: string
+  smsCount: string
+  mccMnc: string
+  price: {
+    pricePerMessage: string
+    currency: string
+  }
+  status: {
+    groupId: string
+    groupName: string
+    id: string
+    name: string
+    description: string
+  }
+  error: {
+    groupId: string
+    groupName: string
+    id: string
+    name: string
+    description: string
+    permanent: string
+  }
+  applicationId: string
 }

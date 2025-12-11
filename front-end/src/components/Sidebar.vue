@@ -19,35 +19,7 @@
       </li>
     </ul>
 
-    <!-- Section Message -->
-    <ul class="nav flex-column">
-      <li class="nav-item">
-        <RouterLink
-          to="/formulairemessage"
-          class="nav-link"
-          :class="{ active: route.path === '/formulairemessage' }"
-        >
-          <i class="fas fa-envelope"></i>
-        Envoyer message
-        </RouterLink>
-      </li>
-    </ul>
     
-
-    <!-- Section Message -->
-    <ul class="nav flex-column">
-      <li class="nav-item">
-        <RouterLink
-          to="/progammeEnvoie"
-          class="nav-link"
-          :class="{ active: route.path === '/progammeEnvoie' }"
-        >
-          <i class="fas fa-paper-plane"></i>
-        envoi programme
-        </RouterLink>
-      </li>
-    </ul>
-
     <ul class="nav flex-column">
       <li class="nav-item">
         <RouterLink

@@ -105,8 +105,8 @@ const calculerStatsMensuelles = () => {
   const tableau = Array(12).fill(0);
 
   historique.value.forEach(log => {
-    if (log.created_at) {
-      const date = new Date(log.created_at);
+    if (log.dateEnvoi) {
+      const date = new Date(log.dateEnvoi);
       const mois = date.getMonth(); // 0 = Janvier
       tableau[mois]++;
     }

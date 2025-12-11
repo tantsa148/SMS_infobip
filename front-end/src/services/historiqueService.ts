@@ -4,7 +4,7 @@ import type { SmsResponseLog } from '../types/historique'
 
 export const getHistoriqueSms = async (): Promise<SmsResponseLog[]> => {
   try {
-    const response = await api.get<SmsResponseLog[]>('/api/historique')
+    const response = await api.get<SmsResponseLog[]>('/api/historique') // utiliser le bon endpoint
     return response.data
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'historique :', error)

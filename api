@@ -41,16 +41,15 @@ http://localhost:8080/api/auth/register
   "baseUrl": "https://api.infobip.com/v2"
 }
 
-http://localhost:8080/sms/sendByIdNumero
-{
-  "idDestinataire": 1,
-  "idNumero": 3,
-  "message": "Bonjour, ceci est un test via ID destinataire."
-}
 
 http://localhost:8080/api/users-detail 
 {
   "idNumero":3
 }
 
-	
+http://localhost:8080/api/sms/send
+{
+  "idNumeroExpediteur":1,
+  "idNumeroDestinataire":1,
+  "idMessage":1 
+}	
