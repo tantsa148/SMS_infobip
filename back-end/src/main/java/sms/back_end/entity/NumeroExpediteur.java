@@ -32,6 +32,11 @@ public class NumeroExpediteur {
     @JoinColumn(name = "id_infobip")
     private InfobipInfo infobipInfo;
 
+    // ✅ NOUVELLE RELATION ManyToOne vers Plateforme
+    @ManyToOne
+    @JoinColumn(name = "id_plateforme") // correspond exactement à la colonne SQL
+    private Plateforme plateforme;
+
     public NumeroExpediteur() {}
 
     @PrePersist
@@ -39,7 +44,7 @@ public class NumeroExpediteur {
         this.dateCreation = LocalDateTime.now();
     }
 
-    // Getters et Setters
+    // Getters / Setters
     public Long getId() {
         return id;
     }
@@ -70,5 +75,13 @@ public class NumeroExpediteur {
 
     public void setInfobipInfo(InfobipInfo infobipInfo) {
         this.infobipInfo = infobipInfo;
+    }
+
+    public Plateforme getPlateforme() {
+        return plateforme;
+    }
+
+    public void setPlateforme(Plateforme plateforme) {
+        this.plateforme = plateforme;
     }
 }

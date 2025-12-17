@@ -16,4 +16,8 @@ export type UsersDetail = {
   username: string;
   role: string;
   userCreatedAt: string;           // date de création du user
+
+  idPlateforme: number;
+  nomPlateforme: string;
+  
 };

@@ -20,19 +20,34 @@ http://localhost:8080/api/auth/register
   "texte":"sms test"
 }
 
---http://localhost:8080/api/numeros-Expediteur
+http://localhost:8080/api/numeros-expediteur
 {
-  "valeur": "+33123456788",  // Valeur du numéro expéditeur (obligatoire)
-  "infobipInfo": {
-    "apiKey": "votre-api-key-ici",  // Clé API d'Infobip
-    "baseUrl": "https://api.infobip.com"  // URL de base
-  }
+    "valeur": "23242528",
+    "infobipInfo": {
+        "id": 2
+    },
+    "idPlateforme": 1
+}
+
+{
+    "valeur": "23242528",
+    "infobipInfo": {
+	  "apiKey": "NOUVEAU_API_KEY",
+	  "baseUrl": "https://api.infobip.com/v2"
+    },
+    "idPlateforme": 1
 }
 
 
 --http://localhost:8080/api/numeros_destinataire
 {
-  "valeur": "26134987654"
+  "valeur": "261377428541",
+  "plateforme": {
+    "id": 1
+  },
+  "user": {
+    "id": 3
+  }
 }
 
 --http://localhost:8080/api/infobip
@@ -53,3 +68,6 @@ http://localhost:8080/api/sms/send
   "idNumeroDestinataire":1,
   "idMessage":1 
 }	
+http://localhost:8080/api/historique/
+
+

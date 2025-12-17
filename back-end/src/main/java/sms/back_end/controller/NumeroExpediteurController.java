@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ import sms.back_end.entity.NumeroExpediteur;
 import sms.back_end.service.NumeroExpediteurService;
 
 @RestController
-@RequestMapping("/api/numeros-Expediteur")
+@RequestMapping("/api/numeros-expediteur")
 public class NumeroExpediteurController {
 
     private final NumeroExpediteurService service;
@@ -26,21 +27,31 @@ public class NumeroExpediteurController {
         this.service = service;
     }
 
+    // CREATE
     @PostMapping
-    public NumeroExpediteurDTO create(@RequestBody NumeroExpediteurRequest request, 
-                                      @RequestHeader(value = "Authorization", required = false) String jwtToken) {
+    public NumeroExpediteurDTO create(
+            @RequestBody NumeroExpediteurRequest request,
+            @RequestHeader(value = "Authorization", required = false) String jwtToken) {
+
         NumeroExpediteur numero = new NumeroExpediteur();
         numero.setValeur(request.getValeur());
 
-        // Extraire le token JWT de l'en-tête (supprimer "Bearer " si présent)
-        String token = (jwtToken != null && jwtToken.startsWith("Bearer ")) ? jwtToken.substring(7) : jwtToken;
+        // Extraire JWT si "Bearer "
+        String token = (jwtToken != null && jwtToken.startsWith("Bearer "))
+                ? jwtToken.substring(7)
+                : jwtToken;
 
-        NumeroExpediteur saved = service.createNumero(numero, request.getInfobipInfo(), token);
+        NumeroExpediteur saved = service.createNumero(
+                numero,
+                request.getInfobipInfo(),
+                request.getIdPlateforme(),
+                token
+        );
+
         return new NumeroExpediteurDTO(saved);
     }
 
-    // ... (autres méthodes inchangées)
-
+    // READ ALL
     @GetMapping
     public List<NumeroExpediteurDTO> getAll() {
         return service.getAllNumeros().stream()
@@ -48,8 +59,28 @@ public class NumeroExpediteurController {
                       .collect(Collectors.toList());
     }
 
+    // READ BY ID
     @GetMapping("/{id}")
     public NumeroExpediteurDTO getById(@PathVariable Long id) {
         return new NumeroExpediteurDTO(service.getNumeroById(id));
+    }
+
+    // UPDATE
+    @PutMapping("/{id}")
+    public NumeroExpediteurDTO update(
+            @PathVariable Long id,
+            @RequestBody NumeroExpediteurRequest request) {
+
+        NumeroExpediteur updated = new NumeroExpediteur();
+        updated.setValeur(request.getValeur());
+
+        NumeroExpediteur saved = service.updateNumero(
+                id,
+                updated,
+                request.getInfobipInfo(),
+                request.getIdPlateforme()
+        );
+
+        return new NumeroExpediteurDTO(saved);
     }
 }

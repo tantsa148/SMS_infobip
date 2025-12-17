@@ -1,6 +1,6 @@
 package sms.back_end.controller;
 
-import java.util.Date; // ⚠️ Changez de java.sql.Date à java.util.Date
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,12 +58,13 @@ public class AuthController {
                 )
             );
 
-            // Récupérer l'id depuis la DB
-            User user = userRepository.findByUsername(loginRequest.getUsername()).get();
+            User user = userRepository.findByUsername(loginRequest.getUsername())
+                    .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
             String token = jwtUtils.generateToken(user.getId(), user.getUsername());
 
-            UserDTO userDTO = new UserDTO(user.getUsername(), user.getRole());
+            // ⚠️ Récupération du nom du rôle
+            UserDTO userDTO = new UserDTO(user.getId(),user.getUsername(), user.getRole().getRole());
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -80,31 +81,35 @@ public class AuthController {
         }
     }
 
+    // --- Register ---
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequestDTO registerRequest) {
-        try {
-            User user = authService.register(
-                    registerRequest.getUsername(),
-                    registerRequest.getPassword(),
-                    registerRequest.getRole()
-            );
+public ResponseEntity<?> register(@RequestBody RegisterRequestDTO registerRequest) {
+    try {
+        User user = authService.register(
+                registerRequest.getUsername(),
+                registerRequest.getPassword(),
+                registerRequest.getRole()
+        );
 
-            UserDTO userDTO = new UserDTO(user.getUsername(), user.getRole());
+        // ⚠️ Inclure l’ID généré automatiquement
+        UserDTO userDTO = new UserDTO(user.getId(), user.getUsername(), user.getRole().getRole());
 
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "Utilisateur créé avec succès",
-                    "user", userDTO
-            ));
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Utilisateur créé avec succès",
+                "user", userDTO
+        ));
 
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", e.getMessage()
-            ));
-        }
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+        ));
     }
+}
 
+   
+    // --- Current User ---
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -119,7 +124,6 @@ public class AuthController {
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
 
-        // Récupérer l'utilisateur complet depuis la DB
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElse(null);
 
@@ -131,8 +135,7 @@ public class AuthController {
                     ));
         }
 
-        // Construire le DTO
-        UserDTO userDTO = new UserDTO(user.getUsername(), user.getRole());
+        UserDTO userDTO = new UserDTO(user.getId(),user.getUsername(), user.getRole().getRole());
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -140,10 +143,8 @@ public class AuthController {
                 "user", userDTO
         ));
     }
-    
-    /**
-     * Endpoint pour se déconnecter
-     */
+
+    // --- Logout ---
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         String token = extractToken(request);
@@ -154,7 +155,6 @@ public class AuthController {
             );
         }
         
-        // Valider le token d'abord
         if (!jwtUtils.validateJwt(token)) {
             return ResponseEntity.badRequest().body(
                 Map.of("error", "Invalid token", "success", false)
@@ -162,16 +162,13 @@ public class AuthController {
         }
         
         try {
-            // Récupérer la date d'expiration
             Long expiryTime = jwtUtils.getExpiryTimestamp(token);
-            
-            // Ajouter à la blacklist
             tokenBlacklistService.blacklistToken(token, expiryTime);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Logout successful");
-            response.put("timestamp", new Date()); // ⚠️ Maintenant java.util.Date
+            response.put("timestamp", new Date());
             response.put("tokenRevoked", true);
             
             return ResponseEntity.ok(response);
@@ -182,21 +179,14 @@ public class AuthController {
             );
         }
     }
-    
-    /**
-     * Endpoint pour forcer le logout sur tous les appareils
-     * (Nécessite généralement un système plus complexe)
-     */
+
+    // --- Logout All (simple) ---
     @PostMapping("/logout-all")
     public ResponseEntity<?> logoutAllDevices(HttpServletRequest request) {
-        // Cette implémentation simple blacklist juste le token courant
-        // Pour une vraie solution "logout all", il faut tracker tous les tokens émis
         return logout(request);
     }
-    
-    /**
-     * Endpoint pour vérifier l'état d'un token
-     */
+
+    // --- Validate Token ---
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(HttpServletRequest request) {
         String token = extractToken(request);
@@ -209,7 +199,6 @@ public class AuthController {
         
         Map<String, Object> response = new HashMap<>();
         
-        // 1. Vérifier si blacklisté
         if (tokenBlacklistService.isTokenBlacklisted(token)) {
             response.put("valid", false);
             response.put("error", "Token revoked");
@@ -217,13 +206,12 @@ public class AuthController {
             return ResponseEntity.status(401).body(response);
         }
         
-        // 2. Vérifier la validité JWT
         boolean isValid = jwtUtils.validateJwt(token);
         response.put("valid", isValid);
         
         if (isValid) {
             response.put("username", jwtUtils.getUsernameFromJwt(token));
-            Date expiry = jwtUtils.getExpirationDateFromToken(token); // ⚠️ java.util.Date
+            Date expiry = jwtUtils.getExpirationDateFromToken(token);
             response.put("expiresAt", expiry);
             response.put("expiresIn", expiry.getTime() - System.currentTimeMillis());
         } else {
@@ -232,21 +220,17 @@ public class AuthController {
         
         return ResponseEntity.ok(response);
     }
-    
-    /**
-     * Endpoint admin pour voir la taille de la blacklist
-     */
+
+    // --- Admin Blacklist Stats ---
     @GetMapping("/admin/blacklist-stats")
     public ResponseEntity<?> getBlacklistStats() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("size", tokenBlacklistService.getBlacklistSize());
-        stats.put("timestamp", new Date()); // ⚠️ java.util.Date
+        stats.put("timestamp", new Date());
         return ResponseEntity.ok(stats);
     }
-    
-    /**
-     * Extraire le token du header Authorization
-     */
+
+    // --- Helper ---
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription</title>
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+
+<div class="login-page">
+
+    <h1>Créer un compte</h1>
+
+    <!-- Message succès -->
+    <p th:if="${success}" class="success" th:text="${success}"></p>
+
+    <!-- Message erreur -->
+    <p th:if="${error}" class="error" th:text="${error}"></p>
+
+    <form th:action="@{/register}" method="post">
+
+        <!-- Username -->
+        <div>
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text"
+                   id="username"
+                   name="username"
+                   placeholder="Entrez votre nom d'utilisateur"
+                   required />
+        </div>
+
+        <!-- Password -->
+        <div>
+            <label for="password">Mot de passe</label>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   placeholder="Entrez votre mot de passe"
+                   required />
+        </div>
+
+        <!-- Numéro à créer pour l'utilisateur -->
+        <div>
+            <label for="valeurNumero">Numéro</label>
+            <input type="text"
+                   id="valeurNumero"
+                   name="valeurNumero"
+                   placeholder="Entrez le numéro"
+                   required />
+        </div>
+
+          <div>
+            <label for="plateformeId">Plateforme</label>
+            <select id="plateformeId" name="plateformeId" required>
+                <option th:each="p : ${plateformes}" 
+                        th:value="${p.id}" 
+                        th:text="${p.nomPlateforme}">Plateforme</option>
+            </select>
+        </div>
+
+
+
+        <!-- Bouton -->
+        <button type="submit">
+            Créer le compte et le numéro
+        </button>
+
+    </form>
+
+    <!-- Lien login -->
+    <p style="text-align:center; margin-top:15px;">
+        Déjà un compte ?
+        <a th:href="@{/login}">Se connecter</a>
+    </p>
+
+</div>
+
+</body>
+</html>

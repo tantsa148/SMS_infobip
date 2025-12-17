@@ -1,15 +1,31 @@
-import api from './api'
-import type { NumeroDestinataire } from '../types/NumeroDestinataire'
+// src/services/NumeroDestinataireService.js
+import api from "./api"; // ton fichier api.js avec l'instance Axios
 
 export default {
-  // Récupérer tous les numéros
-  getAll(): Promise<{ data: NumeroDestinataire[] }> {
-    return api.get('/api/numeros_destinataire')
+  async getAll() {
+    try {
+      const response = await api.get("/api/numeros-destinataire");
+      return response.data; // renvoie le tableau des numéros
+    } catch (error) {
+      console.error("Erreur lors de la récupération des numéros :", error);
+      throw error; // on remonte l'erreur au composant
+    }
   },
+   // POST
+   
+  async addNumero(data: { valeur: string, plateforme: { id: number } }) {
+    console.log("Données envoyées au backend :", data);
 
-  // Ajouter un nouveau numéro (corrigé)
-  addNumero(data: { valeur: string }): Promise<NumeroDestinataire> {
-    return api.post('/api/numeros_destinataire', data)
-      .then(res => res.data)
+
+    try {
+      const response = await api.post("/api/numeros-destinataire", data)
+    
+      return response.data
+    } catch (error) {
+      console.error("Erreur ajout numéro :", error)
+    
+      throw error
+    }
+    
   }
-}
+};

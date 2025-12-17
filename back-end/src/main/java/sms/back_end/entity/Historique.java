@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "vue_messages_complets") // On mappe directement sur la vue
+@Table(name = "vue_messages_complets") // Mapping direct avec la vue SQL
 public class Historique {
 
     @Id
@@ -34,16 +34,22 @@ public class Historique {
     private String infobipMessageId;
 
     @Column(name = "infobip_base_url")
-    private String infobipBaseUrl; // ← nouveau champ
-    
+    private String infobipBaseUrl;
+
     @Column(name = "infobip_api_key")
     private String infobipApiKey;
 
+    @Column(name = "id_plateforme")
+    private Long idPlateforme;
+
+    @Column(name = "plateforme")
+    private String plateforme;
 
     @Column(name = "date_envoi")
     private LocalDateTime dateEnvoi;
 
     // Getters et Setters
+
     public Long getIdEnvoi() { return idEnvoi; }
     public void setIdEnvoi(Long idEnvoi) { this.idEnvoi = idEnvoi; }
 
@@ -67,10 +73,15 @@ public class Historique {
 
     public String getInfobipBaseUrl() { return infobipBaseUrl; }
     public void setInfobipBaseUrl(String infobipBaseUrl) { this.infobipBaseUrl = infobipBaseUrl; }
-        
-        // Getter / Setter
+
     public String getInfobipApiKey() { return infobipApiKey; }
     public void setInfobipApiKey(String infobipApiKey) { this.infobipApiKey = infobipApiKey; }
+
+    public Long getIdPlateforme() { return idPlateforme; }
+    public void setIdPlateforme(Long idPlateforme) { this.idPlateforme = idPlateforme; }
+
+    public String getPlateforme() { return plateforme; }
+    public void setPlateforme(String plateforme) { this.plateforme = plateforme; }
 
     public LocalDateTime getDateEnvoi() { return dateEnvoi; }
     public void setDateEnvoi(LocalDateTime dateEnvoi) { this.dateEnvoi = dateEnvoi; }

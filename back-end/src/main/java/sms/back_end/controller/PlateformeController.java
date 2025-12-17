@@ -24,32 +24,50 @@ public class PlateformeController {
         this.service = service;
     }
 
+    // ============================
     // CREATE
+    // ============================
     @PostMapping
     public Plateforme createPlateforme(@RequestBody Plateforme plateforme) {
         return service.createPlateforme(plateforme);
     }
 
+    // ============================
     // READ ALL
+    // ============================
     @GetMapping
     public List<Plateforme> getAllPlateformes() {
         return service.getAllPlateformes();
     }
 
+    // ============================
     // READ BY ID
+    // ============================
     @GetMapping("/{id}")
     public Plateforme getPlateformeById(@PathVariable Long id) {
-        return service.getPlateformeById(id)
-                .orElseThrow(() -> new RuntimeException("Plateforme non trouvée"));
+        return service.getPlateformeById(id);  // plus d'Optional ici
     }
 
+    // ============================
+    // READ BY NAME
+    // ============================
+    @GetMapping("/nom/{nom}")
+    public Plateforme getPlateformeByNom(@PathVariable String nom) {
+        return service.getPlateformeByNom(nom);
+    }
+
+    // ============================
     // UPDATE
+    // ============================
     @PutMapping("/{id}")
-    public Plateforme updatePlateforme(@PathVariable Long id, @RequestBody Plateforme plateforme) {
+    public Plateforme updatePlateforme(@PathVariable Long id,
+                                       @RequestBody Plateforme plateforme) {
         return service.updatePlateforme(id, plateforme);
     }
 
+    // ============================
     // DELETE
+    // ============================
     @DeleteMapping("/{id}")
     public void deletePlateforme(@PathVariable Long id) {
         service.deletePlateforme(id);

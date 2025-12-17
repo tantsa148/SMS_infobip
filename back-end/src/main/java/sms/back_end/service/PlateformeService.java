@@ -1,7 +1,6 @@
 package sms.back_end.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -35,43 +34,45 @@ public class PlateformeService {
     // ============================
     // READ BY ID
     // ============================
-    public Optional<Plateforme> getPlateformeById(Long id) {
-        return repository.findById(id);
+    public Plateforme getPlateformeById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("Plateforme ID=" + id + " introuvable"));
     }
 
     // ============================
     // READ BY NAME
     // ============================
-    public Optional<Plateforme> getPlateformeByNom(String nom) {
-        return repository.findByNomPlateforme(nom);
-    }
-
-    // ============================
-    // GET OR THROW
-    // ============================
-    public Plateforme getPlateformeOrThrow(Long id) {
-        return repository.findById(id)
+    public Plateforme getPlateformeByNom(String nom) {
+        return repository.findByNomPlateforme(nom)
                 .orElseThrow(() ->
-                        new NotFoundException("La plateforme avec l'ID " + id + " est introuvable"));
+                        new NotFoundException("Plateforme nom=\"" + nom + "\" introuvable"));
     }
 
     // ============================
     // UPDATE
     // ============================
     public Plateforme updatePlateforme(Long id, Plateforme updatedPlateforme) {
-        return repository.findById(id).map(plateforme -> {
-            plateforme.setNomPlateforme(updatedPlateforme.getNomPlateforme());
-            return repository.save(plateforme);
-        }).orElseThrow(() -> new NotFoundException("Plateforme non trouvée"));
+
+        Plateforme existing = repository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("Plateforme ID=" + id + " introuvable"));
+
+        // Mise à jour
+        existing.setNomPlateforme(updatedPlateforme.getNomPlateforme());
+
+        return repository.save(existing);
     }
 
     // ============================
     // DELETE
     // ============================
     public void deletePlateforme(Long id) {
-        if (!repository.existsById(id)) {
-            throw new NotFoundException("Impossible de supprimer : plateforme ID=" + id + " introuvable");
-        }
-        repository.deleteById(id);
+
+        Plateforme existing = repository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("Impossible de supprimer : Plateforme ID=" + id + " introuvable"));
+
+        repository.delete(existing);
     }
 }

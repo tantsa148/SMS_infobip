@@ -12,9 +12,9 @@
         <p><strong>Texte:</strong> {{ logDetail.text }}</p>
         <p><strong>Envoyé à:</strong> {{ formatDate(logDetail.sentAt) }}</p>
         <p><strong>Livré à:</strong> {{ formatDate(logDetail.doneAt) }}</p>
-        <p><strong>Status:</strong> {{ logDetail.status.groupName }} - {{ logDetail.status.description }}</p>
-        <p><strong>Erreur:</strong> {{ logDetail.error.name }} - {{ logDetail.error.description }}</p>
-        <p><strong>Prix:</strong> {{ logDetail.price.pricePerMessage }} {{ logDetail.price.currency }}</p>
+        <p><strong>Status:</strong> {{ logDetail.status?.groupName }} - {{ logDetail.status?.description }}</p>
+        <p><strong>Erreur:</strong> {{ logDetail.error?.name || 'Aucune' }} - {{ logDetail.error?.description || '' }}</p>
+        <p><strong>Prix:</strong> {{ logDetail.price?.pricePerMessage || '0.0' }} {{ logDetail.price?.currency || '' }}</p>
       </div>
 
       <div class="modal-footer">

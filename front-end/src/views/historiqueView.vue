@@ -28,7 +28,7 @@
       <div class="card-body">
         <!-- AUCUN LOG -->
         <div v-if="historiqueFiltre.length === 0" class="text-center py-4">
-          <div class="text-muted mb-3">📩</div>
+          <div class="text-muted mb-3">📩</div>14
           <p class="text-muted mb-2">Aucun historique trouvé</p>
         </div>
 
@@ -41,6 +41,7 @@
                 <th>Expéditeur</th>
                 <th>Numéro Expediteur</th>
                 <th>Destinataire</th>
+                <th>Plateforme</th>
                 <th>Date</th>
                 <th>Action</th>
               </tr>
@@ -51,6 +52,7 @@
                 <td>{{ log.expediteur }}</td>
                 <td>{{ log.numeroExpediteur }}</td>
                 <td>{{ log.numeroDestinataire }}</td>
+                <td>{{ log.plateforme }}</td>
                 <td>{{ formatDate(log.dateEnvoi) }}</td>
                 <td>
                   <button class="btn btn-sm btn-outline-secondary" @click="ouvrirModal(log.idEnvoi)">

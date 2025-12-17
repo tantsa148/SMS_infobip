@@ -16,36 +16,46 @@ public class UsersDetailDTO {
     private String apiKey;
     private String baseUrl;
 
+    // Plateforme
+    private Long idPlateforme;
+    private String nomPlateforme;
+
     private Long idUser;
     private String username;
     private String role;
     private LocalDateTime userCreatedAt;
 
+    public UsersDetailDTO(UsersDetail entity) {
+        this.idUtilisateur = entity.getIdUtilisateur();
+        this.idNumero = entity.getIdNumero();
+        this.dateCreation = entity.getDateCreation();
 
-public UsersDetailDTO(UsersDetail entity) {
-    this.idUtilisateur = entity.getIdUtilisateur();
-    this.idNumero = entity.getIdNumero();
-    this.dateCreation = entity.getDateCreation();
+        // Numéro expéditeur et InfobipInfo
+        if (entity.getNumeroExpediteur() != null) {
+            this.numeroExpediteur = entity.getNumeroExpediteur().getValeur();
 
-    // Numéro expéditeur et InfobipInfo
-    if (entity.getNumeroExpediteur() != null) {
-        this.numeroExpediteur = entity.getNumeroExpediteur().getValeur();
+            if (entity.getNumeroExpediteur().getInfobipInfo() != null) {
+                this.idInfobip = entity.getNumeroExpediteur().getInfobipInfo().getId();
+                this.apiKey = entity.getNumeroExpediteur().getInfobipInfo().getApiKey();
+                this.baseUrl = entity.getNumeroExpediteur().getInfobipInfo().getBaseUrl();
+            }
 
-        if (entity.getNumeroExpediteur().getInfobipInfo() != null) {
-            this.idInfobip = entity.getNumeroExpediteur().getInfobipInfo().getId();
-            this.apiKey = entity.getNumeroExpediteur().getInfobipInfo().getApiKey();
-            this.baseUrl = entity.getNumeroExpediteur().getInfobipInfo().getBaseUrl();
+            // Plateforme
+            if (entity.getNumeroExpediteur().getPlateforme() != null) {
+                this.idPlateforme = entity.getNumeroExpediteur().getPlateforme().getId();
+                this.nomPlateforme = entity.getNumeroExpediteur().getPlateforme().getNomPlateforme();
+            }
+        }
+
+        // Infos utilisateur
+        if (entity.getUser() != null) {
+            this.idUser = entity.getUser().getId();
+            this.username = entity.getUser().getUsername();
+
+            this.userCreatedAt = entity.getUser().getCreatedAt();
         }
     }
 
-    // Infos utilisateur
-    if (entity.getUser() != null) {  // Assure-toi que UsersDetail a un champ User
-        this.idUser = entity.getUser().getId();
-        this.username = entity.getUser().getUsername();
-        this.role = entity.getUser().getRole();
-        this.userCreatedAt = entity.getUser().getCreatedAt();
-    }
-}
     // Méthode statique pour transformer une entité en DTO
     public static UsersDetailDTO fromEntity(UsersDetail entity) {
         return new UsersDetailDTO(entity);
@@ -74,6 +84,12 @@ public UsersDetailDTO(UsersDetail entity) {
 
     public String getBaseUrl() { return baseUrl; }
     public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+
+    public Long getIdPlateforme() { return idPlateforme; }
+    public void setIdPlateforme(Long idPlateforme) { this.idPlateforme = idPlateforme; }
+
+    public String getNomPlateforme() { return nomPlateforme; }
+    public void setNomPlateforme(String nomPlateforme) { this.nomPlateforme = nomPlateforme; }
 
     public Long getIdUser() { return idUser; }
     public void setIdUser(Long idUser) { this.idUser = idUser; }

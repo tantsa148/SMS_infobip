@@ -69,4 +69,25 @@ public class HistoriqueController {
         // Appel à Infobip pour récupérer les détails
         return historiqueService.getSmsDetailsFromInfobip(historique);
     }
+@GetMapping("/whatsapp/{idEnvoi}")
+public JsonNode getWhatsappMessageDetails(
+        @PathVariable Long idEnvoi,
+        HttpServletRequest request
+) {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        throw new RuntimeException("Token manquant");
+    }
+
+    Long userId = jwtUtils.getUserIdFromJwt(authHeader.substring(7));
+
+    Historique historique = historiqueService.getHistoriqueByUserId(userId)
+            .stream()
+            .filter(h -> h.getIdEnvoi().equals(idEnvoi))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Message WhatsApp non trouvé"));
+
+    return historiqueService.getWhatsappMessageDetails(historique);
+}
+
 }

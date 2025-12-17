@@ -44,6 +44,7 @@
                 <th>#</th>
                 <th>Numéro</th>
                 <th>Créé le</th>
+                <th>Plateforme</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -52,6 +53,8 @@
                 <td>{{ index + 1 }}</td>
                 <td>{{ row.valeur }}</td>
                 <td>{{ formatDate(row.dateCreation) }}</td>
+                
+                <td>{{ row.plateforme ? row.plateforme.nomPlateforme : 'Aucune' }}</td>
                 <td class="d-flex gap-2">
                   <button
                     class="btn btn-outline-secondary btn-sm"
@@ -111,9 +114,10 @@ let timeoutId: number | null = null
 
 // Charger les numéros
 const fetchData = async () => {
+  loading.value = true
   try {
-    const response = await numeroDestinataireService.getAll()
-    numeros.value = response.data
+    const data = await numeroDestinataireService.getAll()
+    numeros.value = data
   } catch (err) {
     console.error('Erreur chargement des numéros :', err)
     showNotification('Erreur lors du chargement des numéros', 'error')
@@ -134,18 +138,32 @@ const showNotification = (message: string, type: 'success' | 'error' = 'success'
 }
 
 // Ajouter numéro
-const handleAddNumero = async (numeroComplet: string) => {
+const handleAddNumero = async (payload: { valeur: string; plateforme?: { id: number } }) => {
   try {
-    const data = { valeur: numeroComplet }
-    const newNumeroAdded = await numeroDestinataireService.addNumero(data)
-    numeros.value.unshift(newNumeroAdded)
-    showNotification(`Numéro ${numeroComplet} ajouté avec succès`, 'success')
+    // Construire l'objet JSON conforme au backend
+    const data = {
+      valeur: payload.valeur,
+      plateforme: payload.plateforme || null
+    }
+
+    console.log("Envoi POST :", data)
+
+    // Appel au service
+    const response = await numeroDestinataireService.addNumero(data)
+
+    // Ajouter le nouveau numéro dans la liste
+    numeros.value.unshift(response.data || response)
+
+    showNotification(`Numéro ${payload.valeur} ajouté avec succès`, 'success')
     showAddModal.value = false
+
   } catch (err: any) {
     console.error('Erreur ajout numéro:', err)
+
     let errorMsg = 'Erreur lors de l\'ajout du numéro'
     if (err.response?.data?.message) errorMsg = err.response.data.message
     else if (err.message) errorMsg = err.message
+
     showNotification(errorMsg, 'error')
   }
 }

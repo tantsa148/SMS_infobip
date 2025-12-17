@@ -6,5 +6,6 @@ export interface SmsResponseLog {
   numeroDestinataire: string
   message: string
   infobipMessageId: string
+  plateforme:string
   dateEnvoi: string // ou Date si tu parsers la réponse
 }
