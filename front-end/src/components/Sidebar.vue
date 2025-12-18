@@ -59,6 +59,30 @@
         </RouterLink>
       </li>
     </ul>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <RouterLink
+          to="/messageTexte"
+          class="nav-link"
+          :class="{ active: route.path === '/messageTexte' }"
+        >
+          <i class="fas fa-user-friends"></i>
+        donne messages 
+        </RouterLink>
+      </li>
+    </ul>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <RouterLink
+          to="/messageTexte"
+          class="nav-link"
+          :class="{ active: route.path === '/messageTexte' }"
+        >
+          <i class="fas fa-user-friends"></i>
+        Message enregistre 
+        </RouterLink>
+      </li>
+    </ul>
 
 
  <!-- Bouton Déconnexion -->
