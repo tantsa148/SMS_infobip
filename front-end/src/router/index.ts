@@ -8,6 +8,7 @@ import MessageTexte from '../views/MessageTexte.vue'
 import historiqueView from '../views/historiqueView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import ControllersView from '../views/ControllersView.vue'
+import ModeleMessage from '../views/ModeleMessage.vue'
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
   { path: '/acceuil', name: 'acceuil', component: DashboardView },  
@@ -17,6 +18,7 @@ const routes = [
   {path:'/messageTexte',name: 'Liste Message',component:MessageTexte},
   {path:'/historique',name: 'Historique',component:historiqueView},
   {path:'/controller',name:'Controller',component:ControllersView},
+  {path:'/modeleMessage',name:'modeleMessage',component:ModeleMessage}
 ]
 
 const router = createRouter({

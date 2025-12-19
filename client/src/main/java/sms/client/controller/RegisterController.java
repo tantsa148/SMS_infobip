@@ -5,10 +5,11 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import sms.client.dto.plateforme.PlateformeDTO;
+import sms.client.dto.user.RegisterFormDTO;
 import sms.client.dto.user.RegisterResponseDTO;
 import sms.client.service.AuthRegisterService;
 import sms.client.service.PlateformeService;
@@ -17,7 +18,7 @@ import sms.client.service.PlateformeService;
 public class RegisterController {
 
     private final AuthRegisterService authRegisterService;
-    private final PlateformeService plateformeService; // injection du service
+    private final PlateformeService plateformeService;
 
     public RegisterController(AuthRegisterService authRegisterService,
                               PlateformeService plateformeService) {
@@ -25,34 +26,53 @@ public class RegisterController {
         this.plateformeService = plateformeService;
     }
 
-    // 🔹 Afficher le formulaire
-    @GetMapping("/register")
-    public String showRegisterForm(Model model) {
-        // Récupérer la liste des plateformes depuis le service
-        List<PlateformeDTO> plateformes = plateformeService.getPlateformes();
-        model.addAttribute("plateformes", plateformes);
-        return "register"; // nom de la vue Thymeleaf
+    /* =======================
+       AFFICHAGE FORMULAIRE
+       ======================= */
+
+@GetMapping("/register")
+public String showRegisterForm(Model model) {
+
+    List<PlateformeDTO> plateformes = plateformeService.getPlateformes();
+    model.addAttribute("plateformes", plateformes);
+
+    // Créer le DTO avec valeurs par défaut pour SMS
+    RegisterFormDTO form = new RegisterFormDTO();
+    form.setIdNumeroExpediteur(2L); // expéditeur par défaut
+    form.setIdMessage(1L);          // message par défaut
+    model.addAttribute("registerForm", form);
+
+    return "register";
+}
+
+    /* =======================
+       TRAITEMENT FORMULAIRE
+       ======================= */
+@PostMapping("/register")
+public String register(@ModelAttribute("registerForm") RegisterFormDTO form, Model model) {
+
+    // Nom du controller (simple)
+    String controllerName = this.getClass().getSimpleName(); // ex: "RegisterController"
+    String methodName = "register"; // méthode actuelle
+
+    RegisterResponseDTO response = authRegisterService.registerClientAndAddNumero(
+            form.getUsername(),
+            form.getPassword(),
+            form.getValeurNumero(),
+            form.getPlateformeId(),
+            form.getIdNumeroExpediteur(),
+            form.getIdMessage(),
+            controllerName, // ajouté
+            methodName      // ajouté
+    );
+
+    if (response != null && response.isSuccess()) {
+        model.addAttribute("success", response.getMessage());
+    } else {
+        model.addAttribute("error", response != null ? response.getMessage() : "Erreur inconnue");
     }
 
-    // 🔹 Traiter le formulaire
-    @PostMapping("/register")
-    public String register(
-            @RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String valeurNumero,
-            @RequestParam int plateformeId, // récupérer l'id plateforme choisi
-            Model model) {
+    return "register";
+}
 
-        RegisterResponseDTO response = authRegisterService.registerClientAndAddNumero(
-                username, password, valeurNumero, plateformeId
-        );
-
-        if (response != null && response.isSuccess()) {
-            model.addAttribute("success", response.getMessage());
-            return "register"; 
-        } else {
-            model.addAttribute("error", response != null ? response.getMessage() : "Erreur inconnue");
-            return "register";
-        }
-    }
 }

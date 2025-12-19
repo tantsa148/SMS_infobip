@@ -20,26 +20,29 @@ import tools.jackson.databind.ObjectMapper;
 public class AuthRegisterService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthRegisterService.class);
-    private final AuthLoginService authLoginService;
 
     private final RestTemplate restTemplate;
     private final NumeroDestinataireService numeroService;
     private final SmsClientService smsClientService;
     private final ObjectMapper objectMapper;
+    private final AuthLoginService authLoginService;
 
-    public AuthRegisterService(RestTemplate restTemplate,
-                            NumeroDestinataireService numeroService,
-                            SmsClientService smsClientService,
-                            ObjectMapper objectMapper,
-                            AuthLoginService authLoginService) {
+    public AuthRegisterService(
+            RestTemplate restTemplate,
+            NumeroDestinataireService numeroService,
+            SmsClientService smsClientService,
+            ObjectMapper objectMapper,
+            AuthLoginService authLoginService) {
+
         this.restTemplate = restTemplate;
         this.numeroService = numeroService;
         this.smsClientService = smsClientService;
         this.objectMapper = objectMapper;
         this.authLoginService = authLoginService;
     }
+
     /**
-     * Crée un utilisateur via l'API Auth
+     * Création utilisateur via API Auth
      */
     public RegisterResponseDTO registerClient(String username, String password) {
 
@@ -76,62 +79,70 @@ public class AuthRegisterService {
     }
 
     /**
-     * Crée un utilisateur, ajoute un numéro et envoie un SMS (non bloquant)
+     * Crée utilisateur, ajoute numéro et envoie SMS
      */
     public RegisterResponseDTO registerClientAndAddNumero(
             String username,
             String password,
             String valeurNumero,
-            int plateformeId) {
-
-        // 1️⃣ Créer l'utilisateur
+            int plateformeId,
+            Long idNumeroExpediteur, // ✅ numéro expéditeur depuis le formulaire
+            Long idMessage,            // ✅ message dynamique
+            String controllerName,
+            String methodName
+    ) {
+         log.info("📌 Service appelé depuis {}.{}", controllerName, methodName);
+        // 1️⃣ Création utilisateur
         RegisterResponseDTO response = registerClient(username, password);
 
         if (response == null || !response.isSuccess() || response.getUser() == null) {
             return response;
         }
 
-        // 🔐 LOGIN
-        // 🔐 LOGIN
-        LoginResponseDTO loginResponse =
-                authLoginService.login(username, password);
+        // 2️⃣ Login automatique
+        LoginResponseDTO loginResponse = authLoginService.login(username, password);
 
         if (loginResponse == null || !loginResponse.isSuccess()) {
             log.warn("❌ Connexion automatique échouée");
-            return response; // on stoppe ici
+            return response;
         }
 
-        // ✅ ICI EXACTEMENT
         String token = loginResponse.getToken();
-
-        log.info("✅ Token JWT : {}", token);
-
-        
+        log.info("✅ Token JWT récupéré");
 
         Long userId = response.getUser().getId();
 
-        // 2️⃣ Créer le numéro
+        // 3️⃣ Création du numéro utilisateur (DESTINATAIRE)
         NumeroDestinataireResponseDTO numeroResponse =
                 numeroService.ajouterNumero(valeurNumero, plateformeId, userId.intValue());
 
-        if (numeroResponse != null && numeroResponse.getIdNumero() != null) {
+        if (numeroResponse == null || numeroResponse.getIdNumero() == null) {
+            log.warn("❌ Numéro non créé, SMS non envoyé pour l'utilisateur {}", userId);
+            return response;
+        }
 
-            Long numeroId = numeroResponse.getIdNumero();
+// Numéro créé pour l'utilisateur = destinataire
+Long idNumeroDestinataire = numeroResponse.getIdNumero();
 
-            // 3️⃣ Envoyer le SMS (non bloquant)
-            try {
-                SmsRequest smsRequest = new SmsRequest(
-                        2L,        // idNumeroExpediteur
-                        2L,  // idNumeroDestinataire
-                        1L         // idMessage
-                );
 
-        smsClientService.envoyerSms(smsRequest, token);
-            } catch (Exception e) {
-                log.warn("⚠️ SMS non envoyé pour le numéro {}", numeroId, e);
-            }
-        } else {
-            log.warn("Numéro non créé, SMS non envoyé pour l'utilisateur {}", userId);
+        // 4️⃣ Envoi SMS
+        try {
+            // SmsRequest
+            SmsRequest smsRequest = new SmsRequest();
+            smsRequest.setIdNumeroExpediteur(idNumeroExpediteur);   // depuis le formulaire
+            smsRequest.setIdNumeroDestinataire(idNumeroDestinataire); // dynamique
+            smsRequest.setIdMessage(idMessage); // depuis le formulaire
+
+            log.info("📨 Payload SMS: idNumeroExpediteur={}, idNumeroDestinataire={}, idMessage={}",
+                    smsRequest.getIdNumeroExpediteur(),
+                    smsRequest.getIdNumeroDestinataire(),
+                    smsRequest.getIdMessage());
+
+            // Envoi
+            smsClientService.envoyerSms(smsRequest, token);
+
+        } catch (Exception e) {
+            log.warn("⚠️ Erreur lors de l'envoi du SMS", e);
         }
 
         return response;

@@ -2,23 +2,31 @@ package sms.back_end.dto;
 
 import java.time.LocalDateTime;
 
+import sms.back_end.entity.NumeroDestinataire;
+import sms.back_end.entity.Plateforme;
+
 public class NumeroDestinataireDTO {
 
     private Long idNumero;
     private String valeur;
     private LocalDateTime dateCreation;
-    private Long idPlateforme;
+
+    private Plateforme plateforme;  // ✅ Affichage complet de la plateforme
     private Long idUser;
 
     public NumeroDestinataireDTO() {}
 
-    public NumeroDestinataireDTO(Long idNumero, String valeur, LocalDateTime dateCreation, Long idPlateforme, Long idUser) {
-        this.idNumero = idNumero;
-        this.valeur = valeur;
-        this.dateCreation = dateCreation;
-        this.idPlateforme = idPlateforme;
-        this.idUser = idUser;
+    public NumeroDestinataireDTO(NumeroDestinataire entity) {
+    this.idNumero = entity.getIdNumero();
+    this.valeur = entity.getValeur();
+    this.dateCreation = entity.getDateCreation();
+    this.plateforme = entity.getPlateforme();
+
+    if (entity.getUser() != null) {
+        this.idUser = entity.getUser().getId(); // ✅ CORRECT
     }
+}
+
 
     // Getters & Setters
     public Long getIdNumero() { return idNumero; }
@@ -30,8 +38,8 @@ public class NumeroDestinataireDTO {
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
-    public Long getIdPlateforme() { return idPlateforme; }
-    public void setIdPlateforme(Long idPlateforme) { this.idPlateforme = idPlateforme; }
+    public Plateforme getPlateforme() { return plateforme; }
+    public void setPlateforme(Plateforme plateforme) { this.plateforme = plateforme; }
 
     public Long getIdUser() { return idUser; }
     public void setIdUser(Long idUser) { this.idUser = idUser; }

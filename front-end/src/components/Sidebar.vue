@@ -47,27 +47,16 @@
       </li>
     </ul>
 
+
     <ul class="nav flex-column">
       <li class="nav-item">
         <RouterLink
-          to="/messageTexte"
+          to="/modeleMessage"
           class="nav-link"
-          :class="{ active: route.path === '/messageTexte' }"
+          :class="{ active: route.path === '/modeleMessage' }"
         >
           <i class="fas fa-user-friends"></i>
-        Message enregistre 
-        </RouterLink>
-      </li>
-    </ul>
-    <ul class="nav flex-column">
-      <li class="nav-item">
-        <RouterLink
-          to="/messageTexte"
-          class="nav-link"
-          :class="{ active: route.path === '/messageTexte' }"
-        >
-          <i class="fas fa-user-friends"></i>
-        donne messages 
+        Modele Message 
         </RouterLink>
       </li>
     </ul>

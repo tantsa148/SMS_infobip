@@ -18,14 +18,19 @@
     <!-- Message erreur -->
     <p th:if="${error}" class="error" th:text="${error}"></p>
 
-    <form th:action="@{/register}" method="post">
+    <!-- ✅ Ajout de th:object pour binder le formulaire -->
+    <form th:action="@{/register}" th:object="${registerForm}" method="post">
+
+
+    <input type="hidden" th:field="*{idNumeroExpediteur}" />
+    <input type="hidden" th:field="*{idMessage}" />
 
         <!-- Username -->
         <div>
             <label for="username">Nom d'utilisateur</label>
             <input type="text"
                    id="username"
-                   name="username"
+                   th:field="*{username}"
                    placeholder="Entrez votre nom d'utilisateur"
                    required />
         </div>
@@ -35,7 +40,7 @@
             <label for="password">Mot de passe</label>
             <input type="password"
                    id="password"
-                   name="password"
+                   th:field="*{password}"
                    placeholder="Entrez votre mot de passe"
                    required />
         </div>
@@ -45,21 +50,20 @@
             <label for="valeurNumero">Numéro</label>
             <input type="text"
                    id="valeurNumero"
-                   name="valeurNumero"
+                   th:field="*{valeurNumero}"
                    placeholder="Entrez le numéro"
                    required />
         </div>
 
-          <div>
+        <!-- Plateforme -->
+        <div>
             <label for="plateformeId">Plateforme</label>
-            <select id="plateformeId" name="plateformeId" required>
+            <select id="plateformeId" th:field="*{plateformeId}" required>
                 <option th:each="p : ${plateformes}" 
                         th:value="${p.id}" 
                         th:text="${p.nomPlateforme}">Plateforme</option>
             </select>
         </div>
-
-
 
         <!-- Bouton -->
         <button type="submit">

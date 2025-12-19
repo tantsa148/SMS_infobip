@@ -34,81 +34,86 @@ public class NumeroDestinataireController {
         this.service = service;
     }
 
-    // -------------------
+    // ===================
     // CREATE
-    // -------------------
+    // ===================
     @PostMapping
     public ResponseEntity<?> create(@RequestBody NumeroDestinataire numero) {
         try {
             NumeroDestinataire created = service.createNumero(numero);
-            return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(created));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new NumeroDestinataireDTO(created));
         } catch (BadRequestException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             logger.error("Erreur création numéro : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur interne lors de l'ajout du numéro : " + e.getMessage());
+                    .body("Erreur interne lors de l'ajout du numéro");
         }
     }
 
-    // -------------------
+    // ===================
     // READ ALL
-    // -------------------
+    // ===================
     @GetMapping
     public ResponseEntity<List<NumeroDestinataireDTO>> getAll() {
         List<NumeroDestinataireDTO> list = service.getAllNumeros()
                 .stream()
-                .map(this::toDTO)
+                .map(NumeroDestinataireDTO::new)
                 .collect(Collectors.toList());
+
         return ResponseEntity.ok(list);
     }
 
-    // -------------------
+    // ===================
     // READ BY ID
-    // -------------------
+    // ===================
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         try {
             NumeroDestinataire numero = service.getNumeroById(id);
-            return ResponseEntity.ok(toDTO(numero));
+            return ResponseEntity.ok(new NumeroDestinataireDTO(numero));
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    // -------------------
+    // ===================
     // READ BY VALEUR
-    // -------------------
+    // ===================
     @GetMapping("/search")
     public ResponseEntity<?> getByValeur(@RequestParam String valeur) {
         try {
             NumeroDestinataire numero = service.getByValeur(valeur);
-            return ResponseEntity.ok(toDTO(numero));
+            return ResponseEntity.ok(new NumeroDestinataireDTO(numero));
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
-    // -------------------
+    // ===================
     // UPDATE
-    // -------------------
+    // ===================
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody NumeroDestinataire numero) {
+    public ResponseEntity<?> update(
+            @PathVariable Long id,
+            @RequestBody NumeroDestinataire numero) {
+
         try {
             NumeroDestinataire updated = service.updateNumero(id, numero);
-            return ResponseEntity.ok(toDTO(updated));
+            return ResponseEntity.ok(new NumeroDestinataireDTO(updated));
         } catch (NotFoundException | BadRequestException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             logger.error("Erreur update numéro : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur interne lors de la mise à jour : " + e.getMessage());
+                    .body("Erreur interne lors de la mise à jour");
         }
     }
 
-    // -------------------
+    // ===================
     // DELETE
-    // -------------------
+    // ===================
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
@@ -119,23 +124,7 @@ public class NumeroDestinataireController {
         } catch (Exception e) {
             logger.error("Erreur suppression numéro : ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur interne lors de la suppression : " + e.getMessage());
+                    .body("Erreur interne lors de la suppression");
         }
-    }
-
-    // -------------------
-    // Méthode utilitaire pour convertir l'entité en DTO
-    // -------------------
-    private NumeroDestinataireDTO toDTO(NumeroDestinataire numero) {
-        Long idPlateforme = numero.getPlateforme() != null ? numero.getPlateforme().getId() : null;
-        Long idUser = numero.getUser() != null ? numero.getUser().getId() : null;
-
-        return new NumeroDestinataireDTO(
-                numero.getIdNumero(),
-                numero.getValeur(),
-                numero.getDateCreation(),
-                idPlateforme,
-                idUser
-        );
     }
 }

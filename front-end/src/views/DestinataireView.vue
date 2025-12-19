@@ -53,8 +53,7 @@
                 <td>{{ index + 1 }}</td>
                 <td>{{ row.valeur }}</td>
                 <td>{{ formatDate(row.dateCreation) }}</td>
-                
-                <td>{{ row.plateforme ? row.plateforme.nomPlateforme : 'Aucune' }}</td>
+                <td>{{ row.plateforme?.nomPlateforme ?? '-' }}</td>
                 <td class="d-flex gap-2">
                   <button
                     class="btn btn-outline-secondary btn-sm"
@@ -66,6 +65,7 @@
                 </td>
               </tr>
             </tbody>
+
           </table>
         </div>
       </div>
