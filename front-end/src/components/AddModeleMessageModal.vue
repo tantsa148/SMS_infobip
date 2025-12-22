@@ -4,7 +4,6 @@
       <!-- HEADER -->
       <div class="modal-header">
         <h5 class="modal-title">Ajouter un modèle de message</h5>
-        <button class="btn-close" @click="$emit('close')">&times;</button>
       </div>
 
       <!-- BODY -->

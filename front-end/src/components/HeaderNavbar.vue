@@ -1,30 +1,37 @@
 <template>
   <nav class="navbar-header">
     <div class="container d-flex align-items-center justify-content-between">
-      
-      <!-- Logo ou autre élément à gauche -->
-      <div class="navbar-brand">
-        <!-- Votre logo ici -->
-         <div class="navbar-brand">
-  <h2>{{ pageTitle }}</h2>
-</div>
 
+      <!-- Logo -->
+      <div class="navbar-brand">
+        <h2>{{ pageTitle }}</h2>
       </div>
 
       <!-- Groupe solde + utilisateur -->
- <div class="user-balance-group d-flex align-items-center gap-3">
-          <!-- Solde Twilio -->
-        <div class="twilio-balance-wrapper" v-if="balance">
-          <div class="twilio-balance d-flex align-items-center gap-2">
+      <div class="user-balance-group d-flex align-items-center gap-3">
+
+        <!-- Sélecteur de numéro + bouton Voir -->
+        <div v-if="usersDetails.length > 0" class="d-flex align-items-center gap-2">
+          <select class="form-select" v-model="selectedIdNumero">
+            <option v-for="ud in usersDetails" :key="ud.idNumero" :value="ud.idNumero">
+              {{ ud.numeroExpediteur }}
+            </option>
+          </select>
+          <button class="btn btn-primary btn-sm" @click="fetchBalance">
+            Voir
+          </button>
+        </div>
+
+        <!-- Solde Infobip -->
+        <div class="Infobip-balance-wrapper" v-if="balance">
+          <div class="Infobip-balance d-flex align-items-center gap-2">
             <i class="fa fa-wallet balance-icon"></i>
             <div class="balance-text">
               <span class="balance-amount">{{ balance.balance }} {{ balance.currency }}</span>
-              <span class="balance-currency"></span>
             </div>
           </div>
         </div>
 
-        <!-- Séparateur -->
         <div class="vertical-separator" v-if="balance"></div>
 
         <!-- Menu utilisateur -->
@@ -65,6 +72,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </nav>
@@ -72,32 +80,40 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router'; // <-- pour récupérer la route
+import { useRoute } from 'vue-router';
 import { getCurrentUser } from '../services/userService';
-import TwilioService from '../services/balanceService';
-import type { TwilioBalance } from '../services/balanceService';
+import BalanceService from '../services/balanceService';
+import UsersDetailService from '../services/usersDetailService';
+import type { InfobipBalance } from '../services/balanceService';
 import type { UserDTO } from '../types/user';
+import type { UsersDetail } from '../types/UsersDetail';
 import '../assets/css/NavbarHeader.css';
 
 const showUserMenu = ref(false);
 const currentUser = ref<UserDTO | null>(null);
-const balance = ref<TwilioBalance | null>(null);
+const balance = ref<InfobipBalance | null>(null);
+const usersDetails = ref<UsersDetail[]>([]);
+const selectedIdNumero = ref<number | null>(null);
+
 const route = useRoute();
 const pageTitle = ref<string>('');
 
-// Optionnel : fonction pour formater le nom
+// Formater le nom de page
 function formatPageName(name: string) {
   return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 }
 
-// Définir le titre au montage
+// Récupérer l'utilisateur courant et les détails des numéros
 onMounted(async () => {
   currentUser.value = await getCurrentUser();
 
   try {
-    balance.value = await TwilioService.getBalance();
+    usersDetails.value = await UsersDetailService.getAll();
+    if (usersDetails.value.length > 0) {
+      selectedIdNumero.value = usersDetails.value[0].idNumero;
+    }
   } catch (error) {
-    console.error('Erreur récupération solde Twilio', error);
+    console.error('Erreur récupération des numéros utilisateur', error);
   }
 
   pageTitle.value = route.name ? formatPageName(String(route.name)) : 'Accueil';
@@ -107,6 +123,16 @@ onMounted(async () => {
 watch(() => route.name, (newName) => {
   pageTitle.value = newName ? formatPageName(String(newName)) : 'Accueil';
 });
+
+// Récupérer le solde selon l'idNumero sélectionné
+async function fetchBalance() {
+  if (!selectedIdNumero.value) return;
+  try {
+    balance.value = await BalanceService.getBalance(selectedIdNumero.value);
+  } catch (error) {
+    console.error('Erreur récupération solde Infobip', error);
+  }
+}
 
 function toggleUserMenu() {
   showUserMenu.value = !showUserMenu.value;
@@ -123,7 +149,6 @@ function logout() {
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement | null;
   if (!target) return;
-
   if (!target.closest('.user-profile')) showUserMenu.value = false;
 });
 </script>

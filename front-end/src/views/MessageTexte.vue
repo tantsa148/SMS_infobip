@@ -13,14 +13,15 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title mb-0">Messages enregistrés</div>
 
-        <button 
+        <button
           class="btn btn-primary btn-sm"
           style="width: 100px"
-          @click="refreshMessages"
+          @click="showAddModal = true"
         >
-          Rafraîchir
+          Ajouter
         </button>
       </div>
+
 
       <div class="card-body">
         <!-- AUCUN MESSAGE -->
@@ -54,12 +55,19 @@
       </div>
     </div>
   </div>
+  <AddMessageModal
+  :show="showAddModal"
+  @close="showAddModal = false"
+  @submit="handleAddMessage"
+/>
+
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
 import messageService from "../services/messageService"
 import type { MessageTexte } from "../types/MessageTexte"
+import AddMessageModal from '../components/AddMessageModal.vue'
 
 const loading = ref(true)
 const messages = ref<MessageTexte[]>([])
@@ -79,6 +87,18 @@ const refreshMessages = () => {
   loading.value = true
   fetchMessages()
 }
+const showAddModal = ref(false)
+
+const handleAddMessage = async (payload: { texte: string }) => {
+  try {
+    await messageService.create(payload.texte)
+    showAddModal.value = false
+    await fetchMessages()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 
 onMounted(fetchMessages)
 </script>

@@ -5,7 +5,6 @@
       <!-- Header -->
       <div class="modal-header">
         <h5 class="modal-title">Ajouter un numéro expéditeur</h5>
-        <button type="button" class="btn-close" @click="closeModal" aria-label="Fermer"></button>
       </div>
 
       <!-- Body -->

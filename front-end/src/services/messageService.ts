@@ -6,4 +6,10 @@ export default {
   getAll(): Promise<{ data: MessageTexte[] }> {
     return api.get('/api/messages')
   },
+   // 🔹 Créer un nouveau message
+  create(texte: string): Promise<{ data: MessageTexte }> {
+    return api.post('/api/messages', {
+      texte: texte,
+    })
+  }
 }

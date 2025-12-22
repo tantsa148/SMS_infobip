@@ -20,8 +20,10 @@ public class RegisterController {
     private final AuthRegisterService authRegisterService;
     private final PlateformeService plateformeService;
 
-    public RegisterController(AuthRegisterService authRegisterService,
-                              PlateformeService plateformeService) {
+    public RegisterController(
+            AuthRegisterService authRegisterService,
+            PlateformeService plateformeService) {
+
         this.authRegisterService = authRegisterService;
         this.plateformeService = plateformeService;
     }
@@ -29,50 +31,54 @@ public class RegisterController {
     /* =======================
        AFFICHAGE FORMULAIRE
        ======================= */
+    @GetMapping("/register")
+    public String showRegisterForm(Model model) {
 
-@GetMapping("/register")
-public String showRegisterForm(Model model) {
+        List<PlateformeDTO> plateformes =
+                plateformeService.getPlateformes();
 
-    List<PlateformeDTO> plateformes = plateformeService.getPlateformes();
-    model.addAttribute("plateformes", plateformes);
+        model.addAttribute("plateformes", plateformes);
 
-    // Créer le DTO avec valeurs par défaut pour SMS
-    RegisterFormDTO form = new RegisterFormDTO();
-    form.setIdNumeroExpediteur(2L); // expéditeur par défaut
-    form.setIdMessage(1L);          // message par défaut
-    model.addAttribute("registerForm", form);
+        // DTO simple (plus de message / expéditeur ici)
+        model.addAttribute("registerForm", new RegisterFormDTO());
 
-    return "register";
-}
+        return "register";
+    }
 
     /* =======================
        TRAITEMENT FORMULAIRE
        ======================= */
-@PostMapping("/register")
-public String register(@ModelAttribute("registerForm") RegisterFormDTO form, Model model) {
+    @PostMapping("/register")
+    public String register(
+            @ModelAttribute("registerForm") RegisterFormDTO form,
+            Model model) {
 
-    // Nom du controller (simple)
-    String controllerName = this.getClass().getSimpleName(); // ex: "RegisterController"
-    String methodName = "register"; // méthode actuelle
+        String controllerName =
+                this.getClass().getSimpleName(); // RegisterController
 
-    RegisterResponseDTO response = authRegisterService.registerClientAndAddNumero(
-            form.getUsername(),
-            form.getPassword(),
-            form.getValeurNumero(),
-            form.getPlateformeId(),
-            form.getIdNumeroExpediteur(),
-            form.getIdMessage(),
-            controllerName, // ajouté
-            methodName      // ajouté
-    );
+        String methodName = "register"; // DOIT correspondre à methode en DB
 
-    if (response != null && response.isSuccess()) {
-        model.addAttribute("success", response.getMessage());
-    } else {
-        model.addAttribute("error", response != null ? response.getMessage() : "Erreur inconnue");
+        RegisterResponseDTO response =
+                authRegisterService.registerClientAndAddNumero(
+                        form.getUsername(),
+                        form.getPassword(),
+                        form.getValeurNumero(),
+                        form.getPlateformeId(),
+                        controllerName,
+                        methodName
+                );
+
+        if (response != null && response.isSuccess()) {
+            model.addAttribute("success", response.getMessage());
+        } else {
+            model.addAttribute(
+                    "error",
+                    response != null
+                            ? response.getMessage()
+                            : "Erreur inconnue"
+            );
+        }
+
+        return "register";
     }
-
-    return "register";
-}
-
 }

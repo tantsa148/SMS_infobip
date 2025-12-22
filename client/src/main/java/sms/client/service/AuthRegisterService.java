@@ -11,6 +11,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import sms.client.dto.destinataire.NumeroDestinataireResponseDTO;
+import sms.client.dto.modele.ModeleMessageDTO;
 import sms.client.dto.sms.SmsRequest;
 import sms.client.dto.user.LoginResponseDTO;
 import sms.client.dto.user.RegisterResponseDTO;
@@ -19,26 +20,30 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class AuthRegisterService {
 
-    private static final Logger log = LoggerFactory.getLogger(AuthRegisterService.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(AuthRegisterService.class);
 
     private final RestTemplate restTemplate;
     private final NumeroDestinataireService numeroService;
     private final SmsClientService smsClientService;
     private final ObjectMapper objectMapper;
     private final AuthLoginService authLoginService;
+    private final ModeleMessageClientService modeleMessageClientService;
 
     public AuthRegisterService(
             RestTemplate restTemplate,
             NumeroDestinataireService numeroService,
             SmsClientService smsClientService,
             ObjectMapper objectMapper,
-            AuthLoginService authLoginService) {
+            AuthLoginService authLoginService,
+            ModeleMessageClientService modeleMessageClientService) {
 
         this.restTemplate = restTemplate;
         this.numeroService = numeroService;
         this.smsClientService = smsClientService;
         this.objectMapper = objectMapper;
         this.authLoginService = authLoginService;
+        this.modeleMessageClientService = modeleMessageClientService;
     }
 
     /**
@@ -60,7 +65,11 @@ public class AuthRegisterService {
 
         try {
             ResponseEntity<RegisterResponseDTO> response =
-                    restTemplate.postForEntity(url, request, RegisterResponseDTO.class);
+                    restTemplate.postForEntity(
+                            url,
+                            request,
+                            RegisterResponseDTO.class
+                    );
             return response.getBody();
 
         } catch (HttpClientErrorException e) {
@@ -79,72 +88,94 @@ public class AuthRegisterService {
     }
 
     /**
-     * Crée utilisateur, ajoute numéro et envoie SMS
+     * Création utilisateur + numéro + SMS dynamique
      */
     public RegisterResponseDTO registerClientAndAddNumero(
-            String username,
-            String password,
-            String valeurNumero,
-            int plateformeId,
-            Long idNumeroExpediteur, // ✅ numéro expéditeur depuis le formulaire
-            Long idMessage,            // ✅ message dynamique
-            String controllerName,
-            String methodName
-    ) {
-         log.info("📌 Service appelé depuis {}.{}", controllerName, methodName);
-        // 1️⃣ Création utilisateur
-        RegisterResponseDTO response = registerClient(username, password);
+        String username,
+        String password,
+        String valeurNumero,
+        int plateformeId,
+        String controllerName,
+        String methodName
+) {
 
-        if (response == null || !response.isSuccess() || response.getUser() == null) {
-            return response;
-        }
+    log.info("📌 Service appelé depuis {}.{}",
+            controllerName, methodName);
 
-        // 2️⃣ Login automatique
-        LoginResponseDTO loginResponse = authLoginService.login(username, password);
+    // 1️⃣ Création utilisateur
+    RegisterResponseDTO response =
+            registerClient(username, password);
 
-        if (loginResponse == null || !loginResponse.isSuccess()) {
-            log.warn("❌ Connexion automatique échouée");
-            return response;
-        }
-
-        String token = loginResponse.getToken();
-        log.info("✅ Token JWT récupéré");
-
-        Long userId = response.getUser().getId();
-
-        // 3️⃣ Création du numéro utilisateur (DESTINATAIRE)
-        NumeroDestinataireResponseDTO numeroResponse =
-                numeroService.ajouterNumero(valeurNumero, plateformeId, userId.intValue());
-
-        if (numeroResponse == null || numeroResponse.getIdNumero() == null) {
-            log.warn("❌ Numéro non créé, SMS non envoyé pour l'utilisateur {}", userId);
-            return response;
-        }
-
-// Numéro créé pour l'utilisateur = destinataire
-Long idNumeroDestinataire = numeroResponse.getIdNumero();
-
-
-        // 4️⃣ Envoi SMS
-        try {
-            // SmsRequest
-            SmsRequest smsRequest = new SmsRequest();
-            smsRequest.setIdNumeroExpediteur(idNumeroExpediteur);   // depuis le formulaire
-            smsRequest.setIdNumeroDestinataire(idNumeroDestinataire); // dynamique
-            smsRequest.setIdMessage(idMessage); // depuis le formulaire
-
-            log.info("📨 Payload SMS: idNumeroExpediteur={}, idNumeroDestinataire={}, idMessage={}",
-                    smsRequest.getIdNumeroExpediteur(),
-                    smsRequest.getIdNumeroDestinataire(),
-                    smsRequest.getIdMessage());
-
-            // Envoi
-            smsClientService.envoyerSms(smsRequest, token);
-
-        } catch (Exception e) {
-            log.warn("⚠️ Erreur lors de l'envoi du SMS", e);
-        }
-
+    if (response == null ||
+        !response.isSuccess() ||
+        response.getUser() == null) {
         return response;
     }
+
+    // 2️⃣ Login automatique
+    LoginResponseDTO loginResponse =
+            authLoginService.login(username, password);
+
+    if (loginResponse == null || !loginResponse.isSuccess()) {
+        log.warn("❌ Connexion automatique échouée");
+        return response;
+    }
+
+    // ✅ TOKEN DISPONIBLE ICI
+    String token = loginResponse.getToken();
+    log.info("✅ Token JWT récupéré");
+
+    // 3️⃣ Récupération du modèle APRÈS login
+    ModeleMessageDTO modeleMessage =
+            modeleMessageClientService.findByMethode(
+                    methodName,
+                    token
+            );
+
+    if (modeleMessage == null) {
+        log.warn("❌ Aucun modèle trouvé pour la méthode {}", methodName);
+        return response;
+    }
+
+    Long userId = response.getUser().getId();
+
+    // 4️⃣ Création du numéro destinataire
+    NumeroDestinataireResponseDTO numeroResponse =
+            numeroService.ajouterNumero(
+                    valeurNumero,
+                    plateformeId,
+                    userId.intValue()
+            );
+
+    if (numeroResponse == null ||
+        numeroResponse.getIdNumero() == null) {
+
+        log.warn("❌ Numéro non créé, SMS non envoyé pour l'utilisateur {}",
+                userId);
+        return response;
+    }
+
+    Long idNumeroDestinataire =
+            numeroResponse.getIdNumero();
+
+    // 5️⃣ Envoi SMS
+    SmsRequest smsRequest = new SmsRequest();
+    smsRequest.setIdNumeroExpediteur(
+            modeleMessage.getIdExpediteur()
+    );
+    smsRequest.setIdNumeroDestinataire(
+            idNumeroDestinataire
+    );
+    smsRequest.setIdMessage(
+            modeleMessage.getIdMessage()
+    );
+
+    log.info("📨 SMS [{}] envoyé",
+            modeleMessage.getMethode());
+
+    smsClientService.envoyerSms(smsRequest, token);
+
+    return response;
+}
+
 }

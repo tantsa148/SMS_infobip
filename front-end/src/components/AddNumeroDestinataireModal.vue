@@ -4,12 +4,6 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Ajouter un numéro destinataire</h5>
-        <button 
-          type="button" 
-          class="btn-close" 
-          @click="closeModal"
-          :disabled="submitting"
-        ></button>
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-body">
