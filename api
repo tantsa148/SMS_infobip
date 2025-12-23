@@ -17,8 +17,12 @@ http://localhost:8080/api/auth/register
 
 --http://localhost:8080/api/messages
 {
-  "texte":"sms test"
+    "texte": "Votre code OTP est {{code}}",
+    "evenement": {
+        "id": 1
+    }
 }
+
 
 http://localhost:8080/api/numeros-expediteur
 {
@@ -70,4 +74,8 @@ http://localhost:8080/api/sms/send
 }	
 http://localhost:8080/api/historique/
 
-
+http://localhost:8080/api/evenements 
+{
+    "code": "OTP_LOGIN",
+    "description": "Événement pour la génération OTP"
+}

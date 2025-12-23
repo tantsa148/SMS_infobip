@@ -9,6 +9,7 @@ import historiqueView from '../views/historiqueView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import ControllersView from '../views/ControllersView.vue'
 import ModeleMessage from '../views/ModeleMessage.vue'
+import EvenementView from '../views/EvenementView.vue'
 const routes = [
   { path: '/', name: 'Login', component: LoginView },
   { path: '/acceuil', name: 'acceuil', component: DashboardView },  
@@ -18,7 +19,8 @@ const routes = [
   {path:'/messageTexte',name: 'Liste Message',component:MessageTexte},
   {path:'/historique',name: 'Historique',component:historiqueView},
   {path:'/controller',name:'Controller',component:ControllersView},
-  {path:'/modeleMessage',name:'modeleMessage',component:ModeleMessage}
+  {path:'/modeleMessage',name:'modeleMessage',component:ModeleMessage},
+  {path:'/evenement',name:'evenement',component:EvenementView}
 ]
 
 const router = createRouter({

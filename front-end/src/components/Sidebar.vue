@@ -72,6 +72,18 @@
         </RouterLink>
       </li>
     </ul>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <RouterLink
+          to="/evenement"
+          class="nav-link"
+          :class="{ active: route.path === '/evenement' }"
+        >
+          <i class="fas fa-user-friends"></i>
+        Evenement 
+        </RouterLink>
+      </li>
+    </ul>
 
 
  <!-- Bouton Déconnexion -->

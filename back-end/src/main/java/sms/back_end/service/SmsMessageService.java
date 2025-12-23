@@ -17,19 +17,21 @@ public class SmsMessageService {
         this.repository = repository;
     }
 
-    // CREATE - Ne crée que si le message n'existe pas
     public SmsMessage createMessage(SmsMessage message) {
-        // Vérifier si le message existe déjà (texte exact)
-        Optional<SmsMessage> existing = repository.findByTexte(message.getTexte());
-        
-        if (existing.isPresent()) {
-            // Retourne le message existant sans en créer un nouveau
-            return existing.get();
-        }
-        
-        // Crée un nouveau message seulement s'il n'existe pas
-        return repository.save(message);
+    Optional<SmsMessage> existing = repository.findByTexte(message.getTexte());
+    
+    if (existing.isPresent()) {
+        return existing.get();
     }
+
+    // Associer l'événement si fourni
+    if (message.getEvenement() != null && message.getEvenement().getId() != null) {
+        // Optionnel : vérifier si l'événement existe en base
+        // Si tu veux, tu peux injecter EvenementRepository et valider ici
+    }
+
+    return repository.save(message);
+}
 
     // CREATE - Version qui retourne l'ID (existant ou nouveau)
     public Long createMessageAndGetId(SmsMessage message) {
@@ -74,12 +76,12 @@ public class SmsMessageService {
 
     // UPDATE
     public SmsMessage updateMessage(Long id, SmsMessage updatedMessage) {
-        return repository.findById(id).map(message -> {
-            message.setTexte(updatedMessage.getTexte());
-            return repository.save(message);
-        }).orElseThrow(() -> new RuntimeException("Message non trouvé"));
-    }
-
+    return repository.findById(id).map(message -> {
+        message.setTexte(updatedMessage.getTexte());
+        message.setEvenement(updatedMessage.getEvenement()); // ← ajouter ici
+        return repository.save(message);
+    }).orElseThrow(() -> new RuntimeException("Message non trouvé"));
+}
     // DELETE
     public void deleteMessage(Long id) {
         repository.deleteById(id);

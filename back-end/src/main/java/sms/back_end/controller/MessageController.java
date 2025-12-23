@@ -25,10 +25,12 @@ public class MessageController {
     }
 
     // CREATE
+    // CREATE
     @PostMapping
     public SmsMessage createMessage(@RequestBody SmsMessage message) {
         return service.createMessage(message);
     }
+
 
     // READ ALL
     @GetMapping
@@ -45,9 +47,9 @@ public class MessageController {
 
     // UPDATE
     @PutMapping("/{id}")
-    public SmsMessage updateMessage(@PathVariable Long id, @RequestBody SmsMessage message) {
-        return service.updateMessage(id, message);
-    }
+public SmsMessage updateMessage(@PathVariable Long id, @RequestBody SmsMessage message) {
+    return service.updateMessage(id, message);
+}
 
     // DELETE
     @DeleteMapping("/{id}")

@@ -36,7 +36,7 @@ public class InfobipSmsService {
     private final NumeroExpediteurRepository numeroExpediteurRepo;
     private final NumeroDestinataireRepository numeroDestinataireRepo;
     private final SmsMessageService smsMessageService;
-    private final MessageEnvoyeRepository messageEnvoyeRepo; // <-- injecté
+    private final MessageEnvoyeRepository messageEnvoyeRepo;
 
     public InfobipSmsService(RestTemplate restTemplate,
                              NumeroExpediteurRepository numeroExpediteurRepo,
@@ -47,14 +47,14 @@ public class InfobipSmsService {
         this.numeroExpediteurRepo = numeroExpediteurRepo;
         this.numeroDestinataireRepo = numeroDestinataireRepo;
         this.smsMessageService = smsMessageService;
-        this.messageEnvoyeRepo = messageEnvoyeRepo; // <-- important !
+        this.messageEnvoyeRepo = messageEnvoyeRepo;
     }
 
     public SmsSendResponseDTO sendSms(SmsRequestDTO dto) {
         SmsSendResponseDTO responseDTO = new SmsSendResponseDTO();
 
         try {
-            // 1️⃣ Charger entités
+            // 1️⃣ Charger les entités
             NumeroExpediteur expediteur = numeroExpediteurRepo.findById(dto.getIdNumeroExpediteur())
                     .orElseThrow(() -> new RuntimeException("Numéro expéditeur introuvable"));
 
@@ -67,20 +67,25 @@ public class InfobipSmsService {
             InfobipInfo infobip = expediteur.getInfobipInfo();
             String url = "https://" + infobip.getBaseUrl() + "/sms/2/text/advanced";
 
-            // 2️⃣ Headers
+            // 2️⃣ Préparer les headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "App " + infobip.getApiKey());
-            headers.setAccept(List.of(MediaType.APPLICATION_JSON)); // <-- réponse JSON
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-            // 3️⃣ Body JSON
+            // 3️⃣ Préparer le body JSON
             Map<String, Object> destination = new HashMap<>();
             destination.put("to", destinataire.getValeur());
 
             Map<String, Object> messageObj = new HashMap<>();
             messageObj.put("from", expediteur.getValeur());
             messageObj.put("destinations", List.of(destination));
-            messageObj.put("text", smsMessage.getTexte());
+
+            // ✅ Utiliser le texte fourni dans le DTO si présent (OTP), sinon celui du message en base
+            String texteAAEnvoyer = (dto.getMessage() != null && !dto.getMessage().isEmpty())
+                                    ? dto.getMessage()
+                                    : smsMessage.getTexte();
+            messageObj.put("text", texteAAEnvoyer);
 
             Map<String, Object> body = new HashMap<>();
             body.put("messages", List.of(messageObj));
@@ -89,7 +94,7 @@ public class InfobipSmsService {
             System.out.println("===== ENVOI SMS =====");
             System.out.println("FROM: " + expediteur.getValeur());
             System.out.println("TO  : " + destinataire.getValeur());
-            System.out.println("TEXT: " + smsMessage.getTexte());
+            System.out.println("TEXT: " + texteAAEnvoyer);
             System.out.println("=====================");
 
             // 5️⃣ Envoi HTTP
@@ -125,20 +130,18 @@ public class InfobipSmsService {
                         status.setDescription(statusNode.path("description").asText());
 
                         infobipResponse.setStatus(status);
-
                         responseDTO.setStatut(status.getName());
                         responseDTO.setDescription(status.getDescription());
                     }
 
                     responseDTO.setInfobipResponse(infobipResponse);
 
-                    // 7️⃣ Enregistrer dans la table message_envoye
+                    // 7️⃣ Enregistrer dans message_envoye
                     MessageEnvoye messageEnvoye = new MessageEnvoye();
                     messageEnvoye.setIdNumeroExpediteur(expediteur.getId());
                     messageEnvoye.setIdNumeroDestinataire(destinataire.getIdNumero());
                     messageEnvoye.setIdMessage(smsMessage.getId());
                     messageEnvoye.setInfobipMessageId(infobipResponse.getMessageId());
-
                     messageEnvoyeRepo.save(messageEnvoye);
                 }
             }
@@ -149,7 +152,7 @@ public class InfobipSmsService {
             responseDTO.setIdNumeroDestinataire(destinataire.getIdNumero());
             responseDTO.setNumeroDestinataire(destinataire.getValeur());
             responseDTO.setIdMessage(smsMessage.getId());
-            responseDTO.setMessage(smsMessage.getTexte());
+            responseDTO.setMessage(texteAAEnvoyer);
             responseDTO.setInfobipInfo(new InfobipInfoDTO(infobip));
 
         } catch (HttpClientErrorException e) {
