@@ -33,16 +33,24 @@
         <!-- TABLEAU -->
         <div v-else>
           <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Message</th>
-              </tr>
-            </thead>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Message</th>
+              <th>Événement</th>
+            </tr>
+          </thead>
             <tbody>
               <tr v-for="(msg, index) in messages" :key="msg.id">
                 <td>{{ index + 1 }}</td>
                 <td>{{ msg.texte }}</td>
+
+                <td>
+                  <span v-if="msg.evenement" >
+                    {{ msg.evenement.code }}
+                  </span>
+                  <span v-else class="text-muted">Aucun</span>
+                </td>
               </tr>
             </tbody>
           </table>

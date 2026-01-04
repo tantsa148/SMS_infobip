@@ -10,6 +10,7 @@ import sms.back_end.dto.SmsRequestDTO;
 import sms.back_end.entity.MessageEnvoye;
 import sms.back_end.entity.Otp;
 import sms.back_end.entity.SmsMessage;
+import sms.back_end.exception.OtpInvalidException;
 import sms.back_end.repository.MessageEnvoyeRepository;
 import sms.back_end.repository.OtpRepository;
 import sms.back_end.util.OtpUtil;
@@ -80,29 +81,40 @@ public class OtpService {
     /**
      * Vérifie un OTP.
      */
-    @Transactional
-    public boolean verifyOtp(Long idMessageEnvoye, String code) {
+@Transactional
+public boolean verifyOtp(Long idMessageEnvoye, String code) throws OtpInvalidException {
 
-        Otp otp = otpRepo.findByIdMessageEnvoye(idMessageEnvoye)
-                .orElseThrow(() -> new RuntimeException("OTP introuvable"));
+    Otp otp = otpRepo.findByIdMessageEnvoye(idMessageEnvoye)
+            .orElseThrow(() -> new RuntimeException("OTP introuvable"));
 
-        if (!"PENDING".equals(otp.getStatut())) {
-            throw new RuntimeException("OTP déjà utilisé ou expiré");
-        }
-
-        if (otp.getDateExpiration().isBefore(LocalDateTime.now())) {
-            otp.setStatut("EXPIRED");
-            otpRepo.save(otp);
-            throw new RuntimeException("OTP expiré");
-        }
-
-        if (!passwordEncoder.matches(code, otp.getCodeHash())) {
-            throw new RuntimeException("Code OTP incorrect");
-        }
-
-        otp.setStatut("VERIFIED");
-        otpRepo.save(otp);
-
-        return true;
+    if (!"PENDING".equals(otp.getStatut())) {
+        throw new OtpInvalidException("OTP déjà utilisé ou expiré");
     }
+
+    if (otp.getDateExpiration().isBefore(LocalDateTime.now())) {
+        otp.setStatut("EXPIRED");
+        otpRepo.save(otp);
+        throw new OtpInvalidException("OTP expiré");
+    }
+
+    if (!passwordEncoder.matches(code, otp.getCodeHash())) {
+
+        otp.setTentative(otp.getTentative() + 1);
+
+        if (otp.getTentative() >= otp.getMaxTentative()) {
+            otp.setStatut("EXPIRED");
+        }
+
+        otpRepo.save(otp); // ✅ CETTE FOIS C'EST BIEN COMMIT
+
+        throw new OtpInvalidException(
+            "Code OTP incorrect (" + otp.getTentative() + "/" + otp.getMaxTentative() + ")"
+        );
+    }
+
+    otp.setStatut("VERIFIED");
+    otpRepo.save(otp);
+
+    return true;
+}
 }

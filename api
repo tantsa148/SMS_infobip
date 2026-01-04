@@ -79,3 +79,11 @@ http://localhost:8080/api/evenements
     "code": "OTP_LOGIN",
     "description": "Événement pour la génération OTP"
 }
+
+
+http://localhost:8080/api/otp/send
+{
+  "idNumeroExpediteur":2,
+  "idNumeroDestinataire":1,
+  "idMessage":3
+}
