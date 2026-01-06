@@ -39,28 +39,81 @@
             </div>
           </div>
         </div>
+
+        <!-- Coûts -->
+        <div class="col-sm-6 col-md-3">
+          <div class="card card-stats card-round">
+            <div class="card-body d-flex align-items-center">
+              <div class="icon-square icon-success me-3">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <div class="numbers">
+                <p class="card-category mb-1">Coûts totaux</p>
+                <h4 class="card-title mb-0">
+                  <span v-if="coutTotal > 0">{{ formatCout(coutTotal) }}</span>
+                  <span v-else>0.00 USD</span>
+                </h4>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Graphique -->
+      <!-- Graphiques -->
       <div class="row mt-4">
+        <!-- Graphique Messages (Barres) -->
         <div class="col-md-8">
           <div class="card card-round">
             <div class="card-header">
               <div class="card-head-row">
                 <div class="card-title">Messages envoyés par mois</div>
                 <div class="card-tools">
-                  <a href="#" class="btn btn-label-success btn-round btn-sm me-2">
-                    <span class="btn-label"><i class="fa fa-pencil"></i></span> Export
-                  </a>
-                  <a href="#" class="btn btn-label-info btn-round btn-sm">
-                    <span class="btn-label"><i class="fa fa-print"></i></span> Print
-                  </a>
+                  <!-- Filtre par année -->
+                  <select 
+                    v-model="anneeSelectionnee" 
+                    @change="onAnneeChange"
+                    class="form-select form-select-sm me-2"
+                    style="width: auto; display: inline-block;"
+                  >
+                    <option v-for="annee in anneesDisponibles" :key="annee" :value="annee">
+                      {{ annee }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
             <div class="card-body">
               <div class="chart-container" style="min-height: 375px">
                 <canvas id="statisticsChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graphique Coûts (Ligne) -->
+        <div class="col-md-4">
+          <div class="card card-round">
+            <div class="card-header">
+              <div class="card-head-row">
+                <div class="card-title">Coûts par mois</div>
+                <div class="card-tools">
+                  <!-- Filtre par année -->
+                  <select 
+                    v-model="anneeSelectionnee" 
+                    @change="onAnneeChange"
+                    class="form-select form-select-sm"
+                    style="width: auto; display: inline-block;"
+                  >
+                    <option v-for="annee in anneesDisponibles" :key="annee" :value="annee">
+                      {{ annee }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="min-height: 375px">
+                <canvas id="costsChart"></canvas>
               </div>
             </div>
           </div>
@@ -81,8 +134,10 @@
 import { ref, computed, onMounted } from 'vue'
 import numeroDestinataireService from '../services/numeroDestinataireService'
 import { getHistoriqueSms } from '../services/historiqueService'
+import messageDetailService from '../services/messageDetailService'
+import type { MessageDetail } from '../types/messageDetail'
 import Chart from 'chart.js/auto'
-import "../assets/css/dashboard.css";
+import "../assets/css/dashboard.css"
 
 interface NumeroDestinataire {
   idNumero: number
@@ -100,60 +155,212 @@ interface SmsResponseLog {
 const loading = ref(true)
 const numeros = ref<NumeroDestinataire[]>([])
 const historique = ref<SmsResponseLog[]>([])
+const messagesDetails = ref<MessageDetail[]>([])
+const anneeSelectionnee = ref<number | null>(null)
 
 // Computed pour sécuriser affichage des longueurs
 const nombreNumeros = computed(() => numeros.value.length)
 const nombreMessages = computed(() => historique.value.length)
 
+// Calcul du coût total
+const coutTotal = computed(() => {
+  return messagesDetails.value.reduce((total, message) => {
+    return total + (message.pricePerMessage || 0)
+  }, 0)
+})
+
+// Formatage du coût avec devise
+const formatCout = (montant: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4
+  }).format(montant)
+}
+
+// Liste des années disponibles dans l'historique
+const anneesDisponibles = computed(() => {
+  const annees = new Set<number>()
+  historique.value.forEach(log => {
+    if (log.dateEnvoi) {
+      const annee = new Date(log.dateEnvoi).getFullYear()
+      annees.add(annee)
+    }
+  })
+  return Array.from(annees).sort((a, b) => b - a) // Tri décroissant
+})
+
+// Messages filtrés selon l'année sélectionnée (uniquement pour le graphique)
+const historiqueFiltréGraphique = computed(() => {
+  if (!anneeSelectionnee.value) {
+    return historique.value
+  }
+  return historique.value.filter(log => {
+    if (!log.dateEnvoi) return false
+    const annee = new Date(log.dateEnvoi).getFullYear()
+    return annee === anneeSelectionnee.value
+  })
+})
+
 // ---------------------- STATISTIQUES SMS PAR MOIS ----------------------
 const statsParMois = ref<number[]>([])
+const coutsParMois = ref<number[]>([])
 const labelsMois = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"]
 
 let chart: Chart | null = null
+let costsChart: Chart | null = null
 
 const calculerStatsMensuelles = () => {
-  const tableau = Array(12).fill(0)
-  historique.value.forEach(log => {
+  const tableauMessages = Array(12).fill(0)
+  const tableauCouts = Array(12).fill(0)
+  
+  // Messages filtrés pour le graphique
+  historiqueFiltréGraphique.value.forEach(log => {
     if (log.dateEnvoi) {
       const date = new Date(log.dateEnvoi)
       const mois = date.getMonth()
-      tableau[mois]++
+      tableauMessages[mois]++
     }
   })
-  statsParMois.value = tableau
+  
+  // Coûts filtrés par année
+  const messagesFiltres = anneeSelectionnee.value 
+    ? messagesDetails.value.filter(msg => {
+        if (!msg.sentAt) return false
+        const annee = new Date(msg.sentAt).getFullYear()
+        return annee === anneeSelectionnee.value
+      })
+    : messagesDetails.value
+  
+  messagesFiltres.forEach(msg => {
+    if (msg.sentAt) {
+      const date = new Date(msg.sentAt)
+      const mois = date.getMonth()
+      tableauCouts[mois] += (msg.pricePerMessage || 0)
+    }
+  })
+  
+  statsParMois.value = tableauMessages
+  coutsParMois.value = tableauCouts
 }
 
 const genererGraphique = () => {
+  // Graphique Messages (Barres)
   const ctx = document.getElementById("statisticsChart") as HTMLCanvasElement
-  if (!ctx) return
-  if (chart) chart.destroy()
-  chart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labelsMois,
-      datasets: [
-        {
-          label: "Messages envoyés",
-          data: statsParMois.value,
-          backgroundColor: "rgba(59, 130, 246, 0.6)",
-          borderColor: "#3B82F6",
-          borderWidth: 1,
-          borderRadius: 6,
+  if (ctx) {
+    if (chart) chart.destroy()
+    chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labelsMois,
+        datasets: [
+          {
+            label: "Messages envoyés",
+            data: statsParMois.value,
+            backgroundColor: "rgba(59, 130, 246, 0.6)",
+            borderColor: "#3B82F6",
+            borderWidth: 1,
+            borderRadius: 6,
+          }
+        ]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
         }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  })
+      }
+    })
+  }
+
+  // Graphique Coûts (Ligne)
+  const ctxCosts = document.getElementById("costsChart") as HTMLCanvasElement
+  if (ctxCosts) {
+    if (costsChart) costsChart.destroy()
+    costsChart = new Chart(ctxCosts, {
+      type: "line",
+      data: {
+        labels: labelsMois,
+        datasets: [
+          {
+            label: "Coûts (USD)",
+            data: coutsParMois.value,
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            borderColor: "#3B82F6",
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: "#3B82F6",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointHoverRadius: 6,
+          }
+        ]
+      },
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Coûts: $' + context.parsed.y.toFixed(4)
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value
+              }
+            }
+          }
+        }
+      }
+    })
+  }
+}
+
+// Fonction appelée lors du changement d'année
+const onAnneeChange = () => {
+  calculerStatsMensuelles()
+  genererGraphique()
 }
 
 // ---------------------- CHARGEMENT DES DONNÉES ----------------------
 const fetchData = async () => {
   try {
-    const respHistorique = await getHistoriqueSms()
-    historique.value = respHistorique || []
+    // Chargement des données en parallèle
+    const [respHistorique, respNumeros, respMessagesDetails] = await Promise.all([
+      getHistoriqueSms(),
+      numeroDestinataireService.getAll(),
+      messageDetailService.getAll()
+    ])
 
-    const respNumeros = await numeroDestinataireService.getAll()
+    historique.value = respHistorique || []
     numeros.value = respNumeros || []
+    messagesDetails.value = respMessagesDetails || []
+
+    console.log('Messages détails chargés:', messagesDetails.value.length)
+    console.log('Coût total calculé:', coutTotal.value)
+
+    // Sélectionner l'année la plus récente par défaut
+    if (anneesDisponibles.value.length > 0) {
+      anneeSelectionnee.value = anneesDisponibles.value[0]
+    }
 
     calculerStatsMensuelles()
     setTimeout(genererGraphique, 100)

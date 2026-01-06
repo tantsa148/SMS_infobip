@@ -159,4 +159,63 @@ FOREIGN KEY (id_plateforme)
 REFERENCES plateforme(id)
 ON DELETE SET NULL;
 
+--------------------------------------------------
+----OTP
+--------------------------------------------------
+CREATE TABLE otp (
+    id BIGSERIAL PRIMARY KEY,
 
+    id_message_envoye BIGINT NOT NULL,
+    
+    -- Hash bcrypt du code OTP (jamais stocker le code en clair)
+    code_hash VARCHAR(255) NOT NULL,
+
+    tentative INTEGER NOT NULL DEFAULT 0,
+    max_tentative INTEGER NOT NULL DEFAULT 3,
+
+    -- Statut de l’OTP
+    statut VARCHAR(20) NOT NULL
+        CHECK (statut IN ('PENDING', 'VERIFIED', 'EXPIRED')),
+
+    date_expiration TIMESTAMP NOT NULL,
+    date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Relation avec la table message_envoye (si elle existe)
+    CONSTRAINT fk_otp_message
+        FOREIGN KEY (id_message_envoye)
+        REFERENCES message_envoye(id)
+        ON DELETE CASCADE
+);
+
+
+-----------------------------------------------------
+----Detail message
+-----------------------------------------------------
+CREATE TABLE message_detail (
+    id BIGSERIAL PRIMARY KEY,                 
+
+    message_id VARCHAR(255) NOT NULL UNIQUE,  
+
+    text TEXT NOT NULL,                        
+    sent_at TIMESTAMP NOT NULL,               
+    done_at TIMESTAMP,                        
+    status_id INT NOT NULL,                   
+    status_name VARCHAR(50) NOT NULL,         
+    status_description TEXT,                  
+    price_per_message NUMERIC(10, 4),         
+    currency VARCHAR(10),                     
+    date_creation TIMESTAMP NOT NULL DEFAULT NOW() 
+);
+
+-- Ajouter la colonne id_message_envoye
+ALTER TABLE message_detail 
+ADD COLUMN id_message_envoye INT;
+
+-- Ajouter la contrainte de clé étrangère
+ALTER TABLE message_detail
+ADD CONSTRAINT fk_message_envoye 
+FOREIGN KEY (id_message_envoye) REFERENCES message_envoye(id);
+
+------------------------------------------------------
+----
+------------------------------------------------------
