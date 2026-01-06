@@ -3,8 +3,11 @@ package sms.back_end.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,78 +23,122 @@ public class MessageDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "message_id", nullable = false, unique = true)
-    private String messageId;  // ID Infobip
+    // ID Infobip
+    @Column(name = "message_id", nullable = false)
+    private String messageId;
 
-    // Relation avec MessageEnvoye
-    @ManyToOne
-    @JoinColumn(name = "id_message_envoye", referencedColumnName = "id")
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_message_envoye")
     private MessageEnvoye messageEnvoye;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String text;
 
-    @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
-
-    @Column(name = "done_at")
     private LocalDateTime doneAt;
 
-    @Column(name = "status_id", nullable = false)
     private Integer statusId;
-
-    @Column(name = "status_name", nullable = false)
     private String statusName;
 
-    @Column(name = "status_description")
+    @Column(columnDefinition = "TEXT")
     private String statusDescription;
 
-    @Column(name = "price_per_message", precision = 10, scale = 4)
+    @Column(precision = 10, scale = 4)
     private BigDecimal pricePerMessage;
 
-    @Column(length = 10)
     private String currency;
 
     @Column(name = "date_creation", nullable = false)
     private LocalDateTime dateCreation = LocalDateTime.now();
 
-    // -------------------
-    // Getters & Setters
-    // -------------------
+    /* ================== GETTERS & SETTERS ================== */
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getMessageId() { return messageId; }
-    public void setMessageId(String messageId) { this.messageId = messageId; }
+    public String getMessageId() {
+        return messageId;
+    }
 
-    public MessageEnvoye getMessageEnvoye() { return messageEnvoye; }
-    public void setMessageEnvoye(MessageEnvoye messageEnvoye) { this.messageEnvoye = messageEnvoye; }
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
 
-    public String getText() { return text; }
-    public void setText(String text) { this.text = text; }
+    public MessageEnvoye getMessageEnvoye() {
+        return messageEnvoye;
+    }
 
-    public LocalDateTime getSentAt() { return sentAt; }
-    public void setSentAt(LocalDateTime sentAt) { this.sentAt = sentAt; }
+    public void setMessageEnvoye(MessageEnvoye messageEnvoye) {
+        this.messageEnvoye = messageEnvoye;
+    }
 
-    public LocalDateTime getDoneAt() { return doneAt; }
-    public void setDoneAt(LocalDateTime doneAt) { this.doneAt = doneAt; }
+    public String getText() {
+        return text;
+    }
 
-    public Integer getStatusId() { return statusId; }
-    public void setStatusId(Integer statusId) { this.statusId = statusId; }
+    public void setText(String text) {
+        this.text = text;
+    }
 
-    public String getStatusName() { return statusName; }
-    public void setStatusName(String statusName) { this.statusName = statusName; }
+    public LocalDateTime getSentAt() {
+        return sentAt;
+    }
 
-    public String getStatusDescription() { return statusDescription; }
-    public void setStatusDescription(String statusDescription) { this.statusDescription = statusDescription; }
+    public void setSentAt(LocalDateTime sentAt) {
+        this.sentAt = sentAt;
+    }
 
-    public BigDecimal getPricePerMessage() { return pricePerMessage; }
-    public void setPricePerMessage(BigDecimal pricePerMessage) { this.pricePerMessage = pricePerMessage; }
+    public LocalDateTime getDoneAt() {
+        return doneAt;
+    }
 
-    public String getCurrency() { return currency; }
-    public void setCurrency(String currency) { this.currency = currency; }
+    public void setDoneAt(LocalDateTime doneAt) {
+        this.doneAt = doneAt;
+    }
 
-    public LocalDateTime getDateCreation() { return dateCreation; }
-    public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
+    public Integer getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Integer statusId) {
+        this.statusId = statusId;
+    }
+
+    public String getStatusName() {
+        return statusName;
+    }
+
+    public void setStatusName(String statusName) {
+        this.statusName = statusName;
+    }
+
+    public String getStatusDescription() {
+        return statusDescription;
+    }
+
+    public void setStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
+    }
+
+    public BigDecimal getPricePerMessage() {
+        return pricePerMessage;
+    }
+
+    public void setPricePerMessage(BigDecimal pricePerMessage) {
+        this.pricePerMessage = pricePerMessage;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public LocalDateTime getDateCreation() {
+        return dateCreation;
+    }
 }

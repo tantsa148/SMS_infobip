@@ -217,5 +217,33 @@ ADD CONSTRAINT fk_message_envoye
 FOREIGN KEY (id_message_envoye) REFERENCES message_envoye(id);
 
 ------------------------------------------------------
-----
+----EVENEMENT
 ------------------------------------------------------
+CREATE TABLE evenement (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+------------------------------------------------------
+----EVENEMENT Transaction
+------------------------------------------------------
+
+CREATE TABLE evenement_transaction (
+    id SERIAL PRIMARY KEY,
+
+    id_message_envoye INT NOT NULL,
+
+    reference VARCHAR(100) UNIQUE NOT NULL,
+    montant NUMERIC(10,2) NOT NULL CHECK (montant >= 0),
+
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
+    CONSTRAINT fk_message_envoye
+        FOREIGN KEY (id_message_envoye)
+        REFERENCES message_envoye(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+

@@ -11,4 +11,5 @@ public interface MessageEnvoyeRepository extends JpaRepository<MessageEnvoye, Lo
     Optional<MessageEnvoye> findByIdMessageAndIdNumeroDestinataire(Long idMessage, Long idNumeroDestinataire);
     Optional<MessageEnvoye> findTopByIdNumeroDestinataireOrderByIdDesc(Long idNumeroDestinataire);
     Optional<MessageEnvoye> findByInfobipMessageId(String infobipMessageId);
+    
 }
