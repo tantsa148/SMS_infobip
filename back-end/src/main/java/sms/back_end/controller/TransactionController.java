@@ -1,6 +1,5 @@
 package sms.back_end.controller;
 
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -8,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sms.back_end.dto.TransactionSmsRequestDTO;
+import sms.back_end.dto.TransactionSmsResponseDTO;
 import sms.back_end.service.EvenementTransactionService;
 
 @RestController
@@ -21,21 +21,39 @@ public class TransactionController {
     }
 
     @PostMapping("/envoyer-sms")
-    public ResponseEntity<String> envoyerSmsTransaction(@RequestBody TransactionSmsRequestDTO request) {
-        
+    public ResponseEntity<TransactionSmsResponseDTO> envoyerSmsTransaction(
+            @RequestBody TransactionSmsRequestDTO request
+    ) {
+
         try {
             transactionService.envoyerSmsTransaction(
-                request.getIdNumeroExpediteur(),
-                request.getIdNumeroDestinataire(),
-                request.getIdMessage(),
-                request.getReference(),
-                request.getMontant()
+                    request.getIdNumeroExpediteur(),
+                    request.getIdNumeroDestinataire(),
+                    request.getIdMessage(),
+                    request.getReference(),
+                    request.getMontant()
             );
-            
-            return ResponseEntity.ok("Transaction envoyée avec succès: " + request.getReference());
-            
+
+            TransactionSmsResponseDTO response =
+                    new TransactionSmsResponseDTO(
+                            "SUCCESS",
+                            "Transaction envoyée avec succès",
+                            request.getReference()
+                    );
+
+            return ResponseEntity.ok(response);
+
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Erreur: " + e.getMessage());
+
+            TransactionSmsResponseDTO response =
+                    new TransactionSmsResponseDTO(
+                            "ERROR",
+                            e.getMessage(),
+                            request.getReference()
+                    );
+
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }
+

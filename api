@@ -87,3 +87,30 @@ http://localhost:8080/api/otp/send
   "idNumeroDestinataire":1,
   "idMessage":3
 }
+
+http://localhost:8080/api/transactions/envoyer-sms
+{
+  "idNumeroExpediteur": 1,
+  "idNumeroDestinataire": 2,
+  "idMessage": 5,
+  "reference": "TXN2026010612345",
+  "montant": 75000.00
+}
+
+
+
+http://localhost:8080/api/numeros-destinataire/user/26
+
+[
+	{
+		"idNumero": 38,
+		"valeur": "2022",
+		"dateCreation": "2026-01-07T10:15:32.942608",
+		"plateforme": {
+			"id": 1,
+			"nomPlateforme": "sms",
+			"dateCreation": "2025-12-12T08:49:41.619482"
+		},
+		"idUser": 26
+	}
+]

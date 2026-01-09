@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import jakarta.servlet.http.HttpSession;
 import sms.client.dto.user.LoginResponseDTO;
 import sms.client.service.AuthLoginService;
 
@@ -21,7 +22,7 @@ public class LoginController {
     // 🔹 AFFICHAGE DU FORMULAIRE DE CONNEXION
     @GetMapping("/login")
     public String showLoginForm() {
-        return "login"; // nom de la vue Thymeleaf login.html
+        return "login"; // login.html
     }
 
     // 🔹 TRAITEMENT DU FORMULAIRE
@@ -29,17 +30,25 @@ public class LoginController {
     public String login(
             @RequestParam String username,
             @RequestParam String password,
+            HttpSession session,
             Model model) {
 
         LoginResponseDTO response = authLoginService.login(username, password);
 
         if (response != null && response.isSuccess()) {
-            model.addAttribute("success", response.getMessage());
-            model.addAttribute("token", response.getToken());
-            model.addAttribute("username", response.getUser().getUsername());
-            return "dashboard"; // ou autre page après connexion
+
+            // 🔐 STOCKAGE DU TOKEN EN SESSION
+            session.setAttribute("JWT_TOKEN", response.getToken());
+
+            // ✅ Redirection SANS exposer le token
+            return "redirect:/solde";
+
         } else {
-            model.addAttribute("error", response != null ? response.getMessage() : "Erreur inconnue");
+            // ❌ Login échoué
+            model.addAttribute(
+                    "error",
+                    response != null ? response.getMessage() : "Erreur de connexion"
+            );
             return "login";
         }
     }

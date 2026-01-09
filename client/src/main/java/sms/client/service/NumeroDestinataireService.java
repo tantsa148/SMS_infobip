@@ -65,4 +65,48 @@ public class NumeroDestinataireService {
             return null;
         }
     }
+public NumeroDestinataireResponseDTO getFirstNumeroByUserId(Long userId, String jwtToken) {
+
+    String url = "http://localhost:8080/api/numeros-destinataire/user/" + userId;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // 🔐 Ajouter le token JWT dans l'en-tête
+    headers.setBearerAuth(jwtToken);
+    // équivalent à : headers.set("Authorization", "Bearer " + jwtToken);
+
+    HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+    try {
+        logger.info("Envoi de la requête GET pour récupérer tous les numéros de userId {}", userId);
+
+        ResponseEntity<NumeroDestinataireResponseDTO[]> response =
+                restTemplate.exchange(
+                        url,
+                        org.springframework.http.HttpMethod.GET,
+                        entity,
+                        NumeroDestinataireResponseDTO[].class
+                );
+
+        NumeroDestinataireResponseDTO[] numeros = response.getBody();
+
+        if (numeros != null && numeros.length > 0) {
+            NumeroDestinataireResponseDTO premier = numeros[0];
+            logger.info("Premier numéro trouvé pour userId {} : {}", userId, premier.getValeur());
+            return premier;
+        } else {
+            logger.warn("Aucun numéro trouvé pour userId {}", userId);
+            return null;
+        }
+
+    } catch (HttpClientErrorException e) {
+        logger.error("Erreur API lors de la récupération des numéros: {}", e.getResponseBodyAsString(), e);
+        return null;
+    } catch (Exception e) {
+        logger.error("Erreur inattendue lors de la récupération des numéros", e);
+        return null;
+    }
+}
+
 }

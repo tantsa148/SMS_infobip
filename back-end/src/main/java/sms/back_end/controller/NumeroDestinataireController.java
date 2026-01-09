@@ -127,4 +127,23 @@ public class NumeroDestinataireController {
                     .body("Erreur interne lors de la suppression");
         }
     }
+    // ===================
+// READ BY USER ID
+// ===================
+@GetMapping("/user/{userId}")
+public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
+    try {
+        List<NumeroDestinataireDTO> list = service.getByUser(userId)
+                .stream()
+                .map(NumeroDestinataireDTO::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(list);
+    } catch (Exception e) {
+        logger.error("Erreur récupération des numéros par user : ", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur interne lors de la récupération des numéros");
+    }
+}
+
 }

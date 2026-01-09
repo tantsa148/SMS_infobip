@@ -2,6 +2,7 @@ package sms.back_end.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -104,5 +105,12 @@ public class NumeroDestinataireService {
             throw new NotFoundException("Impossible de supprimer : ID introuvable " + id);
         }
         repository.deleteById(id);
+    }
+ public List<NumeroDestinataire> getByUser(Long userId) {
+        return repository.findByUserId(userId);
+    }
+    
+    public Optional<NumeroDestinataire> getFirstByUserId(Long userId) {
+        return repository.findFirstByUserId(userId);
     }
 }

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Test NumeroDestinataireService</title>
+</head>
+<body>
+    <h1>Tester getFirstNumeroByUserId</h1>
+
+    <form th:action="@{/test-numero}" method="get">
+        <label>User ID :</label>
+        <input type="number" name="userId" required>
+        <button type="submit">Tester</button>
+    </form>
+
+    <div th:if="${message}">
+        <p th:text="${message}"></p>
+        <p th:if="${idNumero}" th:text="'IdNumero : ' + ${idNumero}"></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+create database apptest;
+\c apptest
+
+CREATE TABLE solde (
+    id SERIAL PRIMARY KEY,
+
+    montant NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (montant >= 0),
+
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date_mise_a_jour TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ 
+CREATE OR REPLACE FUNCTION update_solde_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.date_mise_a_jour = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_solde
+BEFORE UPDATE ON solde
+FOR EACH ROW
+EXECUTE FUNCTION update_solde_timestamp();
+ALTER TABLE solde
+ADD COLUMN user_id BIGINT;
+ 

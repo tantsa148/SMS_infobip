@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ajouter Solde</title>
+</head>
+<body>
+<h1>Ajouter du solde</h1>
+
+<form th:action="@{/solde}" method="post">
+    <input type="hidden" name="token" th:value="${token}"/>
+    <label>Montant à ajouter :</label>
+    <input type="text" name="montant" required/>
+    <button type="submit">Ajouter</button>
+</form>
+
+</body>
+</html>

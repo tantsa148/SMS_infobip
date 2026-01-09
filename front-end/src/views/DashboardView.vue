@@ -57,6 +57,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Durée moyenne d'envoi -->
+        <div class="col-sm-6 col-md-3">
+          <div class="card card-stats card-round">
+            <div class="card-body d-flex align-items-center">
+              <div class="icon-square icon-info me-3">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="numbers">
+                <p class="card-category mb-1">Durée moyenne D'envoi</p>
+                <h4 class="card-title mb-0">
+                  <span v-if="dureeMoyenneEnvoi > 0">{{ formatDuree(dureeMoyenneEnvoi) }}</span>
+                  <span v-else>N/A</span>
+                </h4>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Graphiques -->
@@ -169,6 +187,29 @@ const coutTotal = computed(() => {
   }, 0)
 })
 
+// Calcul de la durée moyenne d'envoi (en secondes)
+const dureeMoyenneEnvoi = computed(() => {
+  if (messagesDetails.value.length === 0) return 0
+  
+  let totalDuree = 0
+  let compteur = 0
+  
+  messagesDetails.value.forEach(message => {
+    if (message.sentAt && message.doneAt) {
+      const dateSent = new Date(message.sentAt).getTime()
+      const dateDone = new Date(message.doneAt).getTime()
+      const duree = (dateDone - dateSent) / 1000 // Conversion en secondes
+      
+      if (duree >= 0) { // Vérifier que la durée est valide
+        totalDuree += duree
+        compteur++
+      }
+    }
+  })
+  
+  return compteur > 0 ? totalDuree / compteur : 0
+})
+
 // Formatage du coût avec devise
 const formatCout = (montant: number): string => {
   return new Intl.NumberFormat('en-US', {
@@ -177,6 +218,19 @@ const formatCout = (montant: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4
   }).format(montant)
+}
+
+// Formatage de la durée (secondes → format lisible)
+const formatDuree = (secondes: number): string => {
+  if (secondes < 1) {
+    return `${(secondes * 1000).toFixed(0)} ms`
+  } else if (secondes < 60) {
+    return `${secondes.toFixed(2)} sec`
+  } else {
+    const minutes = Math.floor(secondes / 60)
+    const sec = (secondes % 60).toFixed(0)
+    return `${minutes} min ${sec} sec`
+  }
 }
 
 // Liste des années disponibles dans l'historique
@@ -356,6 +410,7 @@ const fetchData = async () => {
 
     console.log('Messages détails chargés:', messagesDetails.value.length)
     console.log('Coût total calculé:', coutTotal.value)
+    console.log('Durée moyenne d\'envoi:', dureeMoyenneEnvoi.value, 'secondes')
 
     // Sélectionner l'année la plus récente par défaut
     if (anneesDisponibles.value.length > 0) {
