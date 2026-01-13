@@ -31,43 +31,89 @@
         </button>
       </div>
 
+      <!-- PANNEAU DE FILTRES -->
+      <div class="card-body border-bottom bg-light">
+        <div class="row g-2 align-items-end">
+          <div class="col">
+            <label class="form-label small mb-1">Méthode</label>
+            <select 
+              v-model="filtres.methode" 
+              class="form-select form-select-sm"
+              @change="appliquerFiltres"
+            >
+              <option value="">Toutes</option>
+              <option v-for="methode in methodes" :key="methode" :value="methode">
+                {{ methode }}
+              </option>
+            </select>
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Numéro Expéditeur</label>
+            <input 
+              v-model="filtres.numeroExpediteur" 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="Rechercher..."
+              @input="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Texte Message</label>
+            <input 
+              v-model="filtres.texteMessage" 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="Rechercher..."
+              @input="appliquerFiltres"
+            />
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-secondary" @click="reinitialiserFiltres">
+              <i class="fas fa-redo"></i> Réinitialiser
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="card-body">
         <!-- AUCUN MODELE -->
-        <div v-if="modeles.length === 0" class="text-center py-4">
-          <div class="text-muted mb-3">📩</div>
+        <div v-if="modelesFiltres.length === 0" class="text-center py-4">
+        
           <p class="text-muted mb-2">Aucun modèle trouvé</p>
         </div>
 
         <!-- TABLEAU -->
         <div v-else class="table-responsive">
-          <table class="table table-hover">
+          <table class="table table-hover w-100">
             <thead>
               <tr>
-                <th>#</th>
+                <th></th>
                 <th>Méthode</th>
-                <th>ID Expéditeur</th>
-                <th>Numéro Expéditeur</th>
-                <th>ID Message</th>
+                <th>Expéditeur</th>
                 <th>Texte</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(m, index) in modeles" :key="m.id">
+              <tr v-for="(m, index) in modelesFiltres" :key="m.id">
                 <td>{{ index + 1 }}</td>
                 <td>{{ m.methode }}</td>
-                <td>{{ m.idExpediteur }}</td>
                 <td>{{ m.valeurExpediteur }}</td>
-                <td>{{ m.idMessage }}</td>
                 <td>{{ m.texteMessage }}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary" >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div v-if="modeles.length > 0" class="card-footer">
+      <div v-if="modelesFiltres.length > 0" class="card-footer">
         <small class="text-muted">
-          Total : {{ modeles.length }} modèle(s)
+          Affichage : {{ modelesFiltres.length }} / {{ modeles.length }} modèle(s)
         </small>
       </div>
     </div>
@@ -82,23 +128,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import ModeleMessageService from '../services/modeleMessageService'
 import type { ModeleMessageDTO } from '../types/ModeleMessage'
 import AddModeleMessageModal from '../components/AddModeleMessageModal.vue'
 
 const loading = ref(true)
 const modeles = ref<ModeleMessageDTO[]>([])
+const modelesFiltres = ref<ModeleMessageDTO[]>([])
 const apiMessage = ref('')
 const showAddModal = ref(false)
 
+const filtres = ref({
+  methode: '',
+  numeroExpediteur: '',
+  texteMessage: ''
+})
+
 let timeoutId: number | null = null
+
+// Liste unique des méthodes
+const methodes = computed(() => {
+  const uniqueMethodes = [...new Set(modeles.value.map(m => m.methode))]
+  return uniqueMethodes.sort()
+})
+
+const appliquerFiltres = () => {
+  modelesFiltres.value = modeles.value.filter(modele => {
+    const matchMethode = !filtres.value.methode || 
+      modele.methode === filtres.value.methode
+    
+    const matchNumeroExp = !filtres.value.numeroExpediteur || 
+      modele.valeurExpediteur.includes(filtres.value.numeroExpediteur)
+    
+    const matchTexte = !filtres.value.texteMessage || 
+      modele.texteMessage.toLowerCase().includes(filtres.value.texteMessage.toLowerCase())
+
+    return matchMethode && matchNumeroExp && matchTexte
+  })
+}
+
+const reinitialiserFiltres = () => {
+  filtres.value = {
+    methode: '',
+    numeroExpediteur: '',
+    texteMessage: ''
+  }
+  appliquerFiltres()
+}
 
 // Charger les modèles
 const fetchModeles = async () => {
   loading.value = true
   try {
     modeles.value = await ModeleMessageService.getAll()
+    modelesFiltres.value = modeles.value
   } catch (error) {
     console.error('Erreur chargement modèles:', error)
     apiMessage.value = 'Erreur lors du chargement des modèles.'
@@ -117,7 +201,7 @@ const handleAddModele = async (payload: any) => {
     fetchModeles()
   } catch (error) {
     console.error(error)
-    apiMessage.value = 'Erreur lors de l’ajout du modèle'
+    apiMessage.value = 'Erreur lors de l ajout du modèle'
   }
 
   if (timeoutId) clearTimeout(timeoutId)

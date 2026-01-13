@@ -38,7 +38,7 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>#</th>
+                <th></th>
                 <th>Numéro</th>
                 <th>Base URL</th>
                 <th>Créé le</th>

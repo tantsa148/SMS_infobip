@@ -1,5 +1,6 @@
 // types/historiqueDetail.ts
 export interface historiqueDetail {
+  idEnvoi: number  
   messageId: string
   to: string
   from: string

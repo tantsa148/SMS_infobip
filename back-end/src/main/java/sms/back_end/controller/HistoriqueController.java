@@ -1,7 +1,12 @@
 package sms.back_end.controller;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,25 +74,50 @@ public class HistoriqueController {
         // Appel à Infobip pour récupérer les détails
         return historiqueService.getSmsDetailsFromInfobip(historique);
     }
-@GetMapping("/whatsapp/{idEnvoi}")
-public JsonNode getWhatsappMessageDetails(
-        @PathVariable Long idEnvoi,
-        HttpServletRequest request
-) {
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        throw new RuntimeException("Token manquant");
-    }
+        @GetMapping("/whatsapp/{idEnvoi}")
+        public JsonNode getWhatsappMessageDetails(
+                @PathVariable Long idEnvoi,
+                HttpServletRequest request
+        ) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new RuntimeException("Token manquant");
+            }
 
-    Long userId = jwtUtils.getUserIdFromJwt(authHeader.substring(7));
+            Long userId = jwtUtils.getUserIdFromJwt(authHeader.substring(7));
 
-    Historique historique = historiqueService.getHistoriqueByUserId(userId)
-            .stream()
-            .filter(h -> h.getIdEnvoi().equals(idEnvoi))
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Message WhatsApp non trouvé"));
+            Historique historique = historiqueService.getHistoriqueByUserId(userId)
+                    .stream()
+                    .filter(h -> h.getIdEnvoi().equals(idEnvoi))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Message WhatsApp non trouvé"));
 
-    return historiqueService.getWhatsappMessageDetails(historique);
-}
+            return historiqueService.getWhatsappMessageDetails(historique);
+        }
+        
+        @GetMapping("/export/csv")
+        public ResponseEntity<InputStreamResource> exportHistoriqueCsv(
+                HttpServletRequest request
+        ) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new RuntimeException("Token manquant");
+            }
+
+            String token = authHeader.substring(7);
+            Long userId = jwtUtils.getUserIdFromJwt(token);
+
+            ByteArrayInputStream csvStream =
+                    historiqueService.exportHistoriqueCsvByUserId(userId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=historique_user_" + userId + ".csv");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .body(new InputStreamResource(csvStream));
+        }
 
 }

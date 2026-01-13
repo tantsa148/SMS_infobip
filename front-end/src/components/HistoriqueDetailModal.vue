@@ -3,6 +3,14 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5>Détails du SMS</h5>
+          <button
+    v-if="idEnvoi"
+    class="btn btn-primary btn-sm"
+    @click="telechargerPdf(idEnvoi)"
+  >
+    Exporter en PDF
+  </button>
+
       </div>
 
       <div class="modal-body" v-if="logDetail">
@@ -17,19 +25,23 @@
         <p><strong>Prix:</strong> {{ logDetail.price?.pricePerMessage || '0.0' }} {{ logDetail.price?.currency || '' }}</p>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-secondary btn-sm" @click="close">Fermer</button>
-      </div>
+<div class="modal-footer">
+  <button class="btn btn-secondary btn-sm" @click="close">Fermer</button>
+
+</div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { historiqueDetail } from '../types/historiqueDetail'
+import { exportHistoriqueSmsPdf } from '../services/historiqueDetailService'
 
 const props = defineProps<{
   show: boolean
   logDetail: historiqueDetail | null
+  idEnvoi: number | null 
 }>()
 
 const emit = defineEmits<{
@@ -38,9 +50,22 @@ const emit = defineEmits<{
 
 const close = () => emit('update:show', false)
 
+
+const telechargerPdf = async (idEnvoi: number) => {
+  if (!idEnvoi) return
+  try {
+    await exportHistoriqueSmsPdf(idEnvoi)
+  } catch (err) {
+    console.error('Erreur lors de l\'export PDF', err)
+    alert('Impossible de télécharger le PDF')
+  }
+}
+
+
 function formatDate(date: string | Date) {
   return new Date(date).toLocaleString()
 }
+
 </script>
 
 <style scoped>

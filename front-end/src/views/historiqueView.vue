@@ -23,12 +23,76 @@
     <div v-else class="card shadow">
       <div class="card-header d-flex justify-content-between align-items-center">
         <div class="card-title mb-0">Historique SMS</div>
+        <button class="btn btn-primary btn-sm" style="width: 100px" @click="ouvrirModalExport">
+          Exporter
+        </button>
+      </div>
+
+      <!-- PANNEAU DE FILTRES -->
+      <div class="card-body border-bottom bg-light">
+        <div class="row g-2 align-items-end">
+          <div class="col">
+            <label class="form-label small mb-1">Numéro Expéditeur</label>
+            <input 
+              v-model="filtres.numeroExpediteur" 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="Rechercher..."
+              @input="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Destinataire</label>
+            <input 
+              v-model="filtres.numeroDestinataire" 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="Rechercher..."
+              @input="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Plateforme</label>
+            <select 
+              v-model="filtres.plateforme" 
+              class="form-select form-select-sm"
+              @change="appliquerFiltres"
+            >
+              <option value="">Toutes</option>
+              <option v-for="plateforme in plateformes" :key="plateforme" :value="plateforme">
+                {{ plateforme }}
+              </option>
+            </select>
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Date de début</label>
+            <input 
+              v-model="filtres.dateDebut" 
+              type="date" 
+              class="form-control form-control-sm"
+              @change="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Date de fin</label>
+            <input 
+              v-model="filtres.dateFin" 
+              type="date" 
+              class="form-control form-control-sm"
+              @change="appliquerFiltres"
+            />
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-secondary" @click="reinitialiserFiltres">
+              <i class="fas fa-redo"></i> Réinitialiser
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="card-body">
         <!-- AUCUN LOG -->
         <div v-if="historiqueFiltre.length === 0" class="text-center py-4">
-          <div class="text-muted mb-3">📩</div>14
           <p class="text-muted mb-2">Aucun historique trouvé</p>
         </div>
 
@@ -37,7 +101,7 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>#</th>
+                <th></th>
                 <th>Expéditeur</th>
                 <th>Numéro Expediteur</th>
                 <th>Destinataire</th>
@@ -66,7 +130,9 @@
       </div>
 
       <div v-if="historiqueFiltre.length > 0" class="card-footer">
-        <small class="text-muted">Total : {{ historiqueFiltre.length }} SMS</small>
+        <small class="text-muted">
+          Affichage : {{ historiqueFiltre.length }} / {{ historique.length }} SMS
+        </small>
       </div>
     </div>
 
@@ -74,18 +140,30 @@
     <HistoriqueDetailModal
       :show="showDetailModal"
       :logDetail="selectedLogDetail"
+      :idEnvoi="selectedIdEnvoi"   
       @update:show="showDetailModal = $event"
     />
+
+    <!-- MODAL CONFIRMATION EXPORT -->
+    <ExportConfirmModal
+      :show="showExportModal"
+      :itemCount="historiqueFiltre.length"
+      @confirm="confirmerExport"
+      @cancel="fermerModalExport"
+    />
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { getHistoriqueSms } from '../services/historiqueService'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { getHistoriqueSmsById } from '../services/historiqueDetailService'
 import type { SmsResponseLog } from '../types/historique'
 import type { historiqueDetail } from '../types/historiqueDetail'
 import HistoriqueDetailModal from '../components/HistoriqueDetailModal.vue'
+import ExportConfirmModal from '../components/ExportConfirmModal.vue'
+import { getHistoriqueSms, exportHistoriqueCsv } from '../services/historiqueService'
+
 
 const loading = ref(true)
 const historique = ref<SmsResponseLog[]>([])
@@ -94,10 +172,90 @@ const apiMessage = ref('')
 
 const showDetailModal = ref(false)
 const selectedLogDetail = ref<historiqueDetail | null>(null)
+const selectedIdEnvoi = ref<number | null>(null)
+
+const showExportModal = ref(false)
+
+const filtres = ref({
+  numeroExpediteur: '',
+  numeroDestinataire: '',
+  plateforme: '',
+  dateDebut: '',
+  dateFin: ''
+})
+
 let timeoutId: number | null = null
+
+// Liste unique des plateformes
+const plateformes = computed(() => {
+  const uniquePlateformes = [...new Set(historique.value.map(log => log.plateforme))]
+  return uniquePlateformes.sort()
+})
 
 function formatDate(date: string | Date) {
   return new Date(date).toLocaleString()
+}
+
+const appliquerFiltres = () => {
+  historiqueFiltre.value = historique.value.filter(log => {
+    const matchNumeroExp = !filtres.value.numeroExpediteur || 
+      log.numeroExpediteur.includes(filtres.value.numeroExpediteur)
+    
+    const matchNumeroDest = !filtres.value.numeroDestinataire || 
+      log.numeroDestinataire.includes(filtres.value.numeroDestinataire)
+    
+    const matchPlateforme = !filtres.value.plateforme || 
+      log.plateforme === filtres.value.plateforme
+
+    // Filtre par date
+    const dateLog = new Date(log.dateEnvoi)
+    const matchDateDebut = !filtres.value.dateDebut || 
+      dateLog >= new Date(filtres.value.dateDebut)
+    
+    const matchDateFin = !filtres.value.dateFin || 
+      dateLog <= new Date(filtres.value.dateFin + 'T23:59:59')
+
+    return matchNumeroExp && matchNumeroDest && matchPlateforme && matchDateDebut && matchDateFin
+  })
+}
+
+const chargerHistorique = async () => {
+  const data = await getHistoriqueSms()
+  console.log(data)
+}
+
+const ouvrirModalExport = () => {
+  showExportModal.value = true
+}
+
+const fermerModalExport = () => {
+  showExportModal.value = false
+}
+
+const confirmerExport = async () => {
+  try {
+    await exportHistoriqueCsv()
+    fermerModalExport()
+    apiMessage.value = 'Export CSV réussi !'
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => (apiMessage.value = ''), 3000)
+  } catch (error) {
+    console.error('Erreur lors de l\'export:', error)
+    apiMessage.value = 'Erreur lors de l\'export CSV.'
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => (apiMessage.value = ''), 3000)
+  }
+}
+
+const reinitialiserFiltres = () => {
+  filtres.value = {
+    numeroExpediteur: '',
+    numeroDestinataire: '',
+    plateforme: '',
+    dateDebut: '',
+    dateFin: ''
+  }
+  appliquerFiltres()
 }
 
 const fetchHistorique = async () => {
@@ -117,6 +275,7 @@ const fetchHistorique = async () => {
 const ouvrirModal = async (idEnvoi: number) => {
   try {
     selectedLogDetail.value = await getHistoriqueSmsById(idEnvoi)
+    selectedIdEnvoi.value = idEnvoi
     showDetailModal.value = true
   } catch (err) {
     console.error('Erreur chargement détail SMS', err)

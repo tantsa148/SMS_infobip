@@ -1,5 +1,6 @@
 package sms.back_end.service;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.springframework.http.HttpEntity;
@@ -22,12 +23,16 @@ public class HistoriqueService {
     private final HistoriqueRepository historiqueRepository;
     private final MessageDetailService messageDetailService;
 
-    // Constructeur pour injection
-    public HistoriqueService(HistoriqueRepository historiqueRepository, 
-                            MessageDetailService messageDetailService) {
+    private final HistoriqueExportService historiqueExportService;
+
+    public HistoriqueService(HistoriqueRepository historiqueRepository,
+                            MessageDetailService messageDetailService,
+                            HistoriqueExportService historiqueExportService) {
         this.historiqueRepository = historiqueRepository;
         this.messageDetailService = messageDetailService;
+        this.historiqueExportService = historiqueExportService;
     }
+
 
     /**
      * Récupère l'historique pour un utilisateur donné
@@ -274,4 +279,9 @@ public class HistoriqueService {
             throw new RuntimeException("Impossible de récupérer les détails WhatsApp: " + e.getMessage(), e);
         }
     }
+    public ByteArrayInputStream exportHistoriqueCsvByUserId(Long userId) {
+    List<Historique> historiques = getHistoriqueByUserId(userId);
+    return historiqueExportService.exportToCsv(historiques);
+}
+
 }

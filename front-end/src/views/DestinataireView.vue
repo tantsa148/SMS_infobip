@@ -29,9 +29,62 @@
         </button>
       </div>
 
+      <!-- PANNEAU DE FILTRES -->
+      <div class="card-body border-bottom bg-light">
+        <div class="row g-2 align-items-end">
+          <div class="col">
+            <label class="form-label small mb-1">Numéro</label>
+            <input 
+              v-model="filtres.numero" 
+              type="text" 
+              class="form-control form-control-sm" 
+              placeholder="Rechercher..."
+              @input="appliquerFiltres"
+            />
+          </div>
+          
+          <div class="col">
+            <label class="form-label small mb-1">Date de début</label>
+            <input 
+              v-model="filtres.dateDebut" 
+              type="date" 
+              class="form-control form-control-sm"
+              @change="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Date de fin</label>
+            <input 
+              v-model="filtres.dateFin" 
+              type="date" 
+              class="form-control form-control-sm"
+              @change="appliquerFiltres"
+            />
+          </div>
+          <div class="col">
+            <label class="form-label small mb-1">Plateforme</label>
+            <select 
+              v-model="filtres.plateforme" 
+              class="form-select form-select-sm"
+              @change="appliquerFiltres"
+            >
+              <option value="">Toutes</option>
+              <option v-for="plateforme in plateformes" :key="plateforme" :value="plateforme">
+                {{ plateforme }}
+              </option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-secondary" @click="reinitialiserFiltres">
+              <i class="fas fa-redo"></i> Réinitialiser
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="card-body">
         <!-- AUCUN NUMERO -->
-        <div v-if="numeros.length === 0" class="text-center py-4">
+        <div v-if="numerosFiltre.length === 0" class="text-center py-4">
           <div class="text-muted mb-3">📱</div>
           <p class="text-muted mb-2">Aucun numéro trouvé</p>
         </div>
@@ -41,7 +94,7 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>#</th>
+                <th></th>
                 <th>Numéro</th>
                 <th>Créé le</th>
                 <th>Plateforme</th>
@@ -49,7 +102,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(row, index) in numeros" :key="row.idNumero">
+              <tr v-for="(row, index) in numerosFiltre" :key="row.idNumero">
                 <td>{{ index + 1 }}</td>
                 <td>{{ row.valeur }}</td>
                 <td>{{ formatDate(row.dateCreation) }}</td>
@@ -70,8 +123,10 @@
         </div>
       </div>
 
-      <div v-if="numeros.length > 0" class="card-footer">
-        <small class="text-muted">Total : {{ numeros.length }} numéro(s)</small>
+      <div v-if="numerosFiltre.length > 0" class="card-footer">
+        <small class="text-muted">
+          Affichage : {{ numerosFiltre.length }} / {{ numeros.length }} numéro(s)
+        </small>
       </div>
     </div>
 
@@ -94,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import numeroDestinataireService from '../services/numeroDestinataireService'
 import type { NumeroDestinataire } from '../types/NumeroDestinataire'
 import ModalAddNumero from '../components/AddNumeroDestinataireModal.vue'
@@ -103,6 +158,7 @@ import "../assets/css/destinataire.css"
 
 const loading = ref(true)
 const numeros = ref<NumeroDestinataire[]>([])
+const numerosFiltre = ref<NumeroDestinataire[]>([])
 const showAddModal = ref(false)
 const apiMessage = ref('')
 
@@ -110,7 +166,55 @@ const apiMessage = ref('')
 const showSendModal = ref(false)
 const selectedNumero = ref<NumeroDestinataire | null>(null)
 
+// Filtres
+const filtres = ref({
+  numero: '',
+  plateforme: '',
+  dateDebut: '',
+  dateFin: ''
+})
+
 let timeoutId: number | null = null
+
+// Liste unique des plateformes
+const plateformes = computed(() => {
+  const uniquePlateformes = [...new Set(
+    numeros.value
+      .map(n => n.plateforme?.nomPlateforme)
+      .filter(Boolean)
+  )]
+  return uniquePlateformes.sort()
+})
+
+const appliquerFiltres = () => {
+  numerosFiltre.value = numeros.value.filter(numero => {
+    const matchNumero = !filtres.value.numero || 
+      numero.valeur.includes(filtres.value.numero)
+    
+    const matchPlateforme = !filtres.value.plateforme || 
+      numero.plateforme?.nomPlateforme === filtres.value.plateforme
+
+    // Filtre par date
+    const dateCreation = new Date(numero.dateCreation)
+    const matchDateDebut = !filtres.value.dateDebut || 
+      dateCreation >= new Date(filtres.value.dateDebut)
+    
+    const matchDateFin = !filtres.value.dateFin || 
+      dateCreation <= new Date(filtres.value.dateFin + 'T23:59:59')
+
+    return matchNumero && matchPlateforme && matchDateDebut && matchDateFin
+  })
+}
+
+const reinitialiserFiltres = () => {
+  filtres.value = {
+    numero: '',
+    plateforme: '',
+    dateDebut: '',
+    dateFin: ''
+  }
+  appliquerFiltres()
+}
 
 // Charger les numéros
 const fetchData = async () => {
@@ -118,6 +222,7 @@ const fetchData = async () => {
   try {
     const data = await numeroDestinataireService.getAll()
     numeros.value = data
+    numerosFiltre.value = data
   } catch (err) {
     console.error('Erreur chargement des numéros :', err)
     showNotification('Erreur lors du chargement des numéros', 'error')
@@ -152,7 +257,9 @@ const handleAddNumero = async (payload: { valeur: string; plateforme?: { id: num
     const response = await numeroDestinataireService.addNumero(data)
 
     // Ajouter le nouveau numéro dans la liste
-    numeros.value.unshift(response.data || response)
+    const newNumero = response.data || response
+    numeros.value.unshift(newNumero)
+    appliquerFiltres()
 
     showNotification(`Numéro ${payload.valeur} ajouté avec succès`, 'success')
     showAddModal.value = false
@@ -186,3 +293,26 @@ const openSendModal = (numero: NumeroDestinataire) => {
 
 onMounted(fetchData)
 </script>
+
+<style scoped>
+.fixed-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+</style>

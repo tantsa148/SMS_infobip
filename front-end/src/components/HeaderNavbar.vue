@@ -18,7 +18,7 @@
             </option>
           </select>
           <button class="btn btn-primary btn-sm" @click="fetchBalance">
-            Voir
+            Solde
           </button>
         </div>
 

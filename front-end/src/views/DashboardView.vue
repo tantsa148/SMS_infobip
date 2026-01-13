@@ -84,7 +84,9 @@
           <div class="card card-round">
             <div class="card-header">
               <div class="card-head-row">
-                <div class="card-title">Messages envoyés par mois</div>
+                <div class="card-title">
+                  {{ modeDetail ? 'Messages envoyés par jour' : 'Messages envoyés par mois' }}
+                </div>
                 <div class="card-tools">
                   <!-- Filtre par année -->
                   <select 
@@ -97,6 +99,30 @@
                       {{ annee }}
                     </option>
                   </select>
+                  
+                  <!-- Filtre par mois (visible uniquement en mode détail) -->
+                  <select 
+                    v-if="modeDetail"
+                    v-model="moisSelectionne" 
+                    @change="onMoisChange"
+                    class="form-select form-select-sm me-2"
+                    style="width: auto; display: inline-block;"
+                  >
+                    <option v-for="(mois, index) in labelsMois" :key="index" :value="index">
+                      {{ mois }}
+                    </option>
+                  </select>
+                  
+                  <!-- Bouton toggle vue -->
+                  <button 
+                    @click="toggleModeDetail"
+                    class="btn btn-sm"
+                    :class="modeDetail ? 'btn-secondary' : 'btn-primary'"
+                    style="display: inline-block;"
+                  >
+                    <i :class="modeDetail ? 'fas fa-chart-bar' : 'fas fa-calendar-day'" class="me-1"></i>
+                    {{ modeDetail ? 'Vue mensuelle' : 'Voir détails' }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -175,6 +201,8 @@ const numeros = ref<NumeroDestinataire[]>([])
 const historique = ref<SmsResponseLog[]>([])
 const messagesDetails = ref<MessageDetail[]>([])
 const anneeSelectionnee = ref<number | null>(null)
+const moisSelectionne = ref<number>(new Date().getMonth()) // Mois actuel par défaut
+const modeDetail = ref(false) // Mode détail activé/désactivé
 
 // Computed pour sécuriser affichage des longueurs
 const nombreNumeros = computed(() => numeros.value.length)
@@ -259,11 +287,41 @@ const historiqueFiltréGraphique = computed(() => {
 
 // ---------------------- STATISTIQUES SMS PAR MOIS ----------------------
 const statsParMois = ref<number[]>([])
+const statsParJour = ref<number[]>([])
 const coutsParMois = ref<number[]>([])
 const labelsMois = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"]
+const labelsJours = ref<string[]>([])
 
 let chart: Chart | null = null
 let costsChart: Chart | null = null
+
+// Calcul des statistiques par jour pour le mois sélectionné
+const calculerStatsJournalieres = () => {
+  if (!anneeSelectionnee.value) return
+  
+  const annee = anneeSelectionnee.value
+  const mois = moisSelectionne.value
+  
+  // Obtenir le nombre de jours dans le mois
+  const nbJours = new Date(annee, mois + 1, 0).getDate()
+  
+  // Initialiser les tableaux
+  const tableauMessages = Array(nbJours).fill(0)
+  labelsJours.value = Array.from({ length: nbJours }, (_, i) => String(i + 1))
+  
+  // Compter les messages par jour
+  historique.value.forEach(log => {
+    if (log.dateEnvoi) {
+      const date = new Date(log.dateEnvoi)
+      if (date.getFullYear() === annee && date.getMonth() === mois) {
+        const jour = date.getDate() - 1 // Index 0-based
+        tableauMessages[jour]++
+      }
+    }
+  })
+  
+  statsParJour.value = tableauMessages
+}
 
 const calculerStatsMensuelles = () => {
   const tableauMessages = Array(12).fill(0)
@@ -300,18 +358,22 @@ const calculerStatsMensuelles = () => {
 }
 
 const genererGraphique = () => {
-  // Graphique Messages (Barres)
   const ctx = document.getElementById("statisticsChart") as HTMLCanvasElement
   if (ctx) {
     if (chart) chart.destroy()
+    
+    // Choisir les données selon le mode
+    const labels = modeDetail.value ? labelsJours.value : labelsMois
+    const data = modeDetail.value ? statsParJour.value : statsParMois.value
+    
     chart = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: labelsMois,
+        labels: labels,
         datasets: [
           {
             label: "Messages envoyés",
-            data: statsParMois.value,
+            data: data,
             backgroundColor: "rgba(59, 130, 246, 0.6)",
             borderColor: "#3B82F6",
             borderWidth: 1,
@@ -326,6 +388,28 @@ const genererGraphique = () => {
           legend: {
             display: true,
             position: 'top'
+          },
+          tooltip: {
+            callbacks: modeDetail.value ? {
+              title: function(context) {
+                const moisNom = labelsMois[moisSelectionne.value]
+                return `${context[0].label} ${moisNom} ${anneeSelectionnee.value}`
+              }
+            } : undefined
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: modeDetail.value,
+              text: 'Jour du mois'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
           }
         }
       }
@@ -388,9 +472,27 @@ const genererGraphique = () => {
   }
 }
 
+// Fonction pour basculer entre vue mensuelle et détaillée
+const toggleModeDetail = () => {
+  modeDetail.value = !modeDetail.value
+  if (modeDetail.value) {
+    calculerStatsJournalieres()
+  }
+  genererGraphique()
+}
+
 // Fonction appelée lors du changement d'année
 const onAnneeChange = () => {
   calculerStatsMensuelles()
+  if (modeDetail.value) {
+    calculerStatsJournalieres()
+  }
+  genererGraphique()
+}
+
+// Fonction appelée lors du changement de mois
+const onMoisChange = () => {
+  calculerStatsJournalieres()
   genererGraphique()
 }
 
@@ -418,6 +520,7 @@ const fetchData = async () => {
     }
 
     calculerStatsMensuelles()
+    calculerStatsJournalieres()
     setTimeout(genererGraphique, 100)
 
   } catch (err) {
