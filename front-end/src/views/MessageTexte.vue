@@ -87,8 +87,8 @@
                   </span>
                   <span v-else class="text-muted">Aucun</span>
                 </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-secondary" >
+<td>
+                    <button class="btn btn-sm btn-outline-secondary" @click="openDeleteModal(msg)">
                       <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>
@@ -106,11 +106,35 @@
       </div>
     </div>
   </div>
-  <AddMessageModal
+<AddMessageModal
   :show="showAddModal"
   @close="showAddModal = false"
   @submit="handleAddMessage"
 />
+
+<!-- Modal de confirmation de suppression -->
+<div v-if="showDeleteModal" class="modal-backdrop-custom" @click.self="showDeleteModal = false; deleteError = ''">
+  <div class="modal-custom">
+    <div class="modal-header">
+      <h5 class="modal-title">Confirmation de suppression</h5>
+      <button type="button" class="btn-close" @click="showDeleteModal = false; deleteError = ''">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Êtes-vous sûr de vouloir supprimer ce message ?</p>
+      <p class="text-muted mb-0">"{{ messageToDelete?.texte }}"</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" @click="showDeleteModal = false; deleteError = ''">Annuler</button>
+      <button type="button" class="btn btn-danger" @click="confirmDelete">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification toast -->
+<div v-if="deleteError" class="notification-toast alert alert-danger alert-dismissible fade show" role="alert">
+  {{ deleteError }}
+  <button type="button" class="btn-close" @click="deleteError = ''"></button>
+</div>
 
 </template>
 
@@ -172,21 +196,44 @@ const fetchMessages = async () => {
   }
 }
 
-const refreshMessages = () => {
-  loading.value = true
-  fetchMessages()
-}
 const showAddModal = ref(false)
+const showDeleteModal = ref(false)
+const messageToDelete = ref<MessageTexte | null>(null)
 
-const handleAddMessage = async (payload: { texte: string }) => {
+const handleAddMessage = async (payload: { texte: string; evenementId: number }) => {
   try {
-    await messageService.create(payload.texte)
+    await messageService.create(payload)
     showAddModal.value = false
     await fetchMessages()
   } catch (err) {
     console.error(err)
   }
 }
+
+const openDeleteModal = (msg: MessageTexte) => {
+  messageToDelete.value = msg
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  if (!messageToDelete.value) return
+  try {
+    await messageService.delete(messageToDelete.value.id)
+    showDeleteModal.value = false
+    messageToDelete.value = null
+    await fetchMessages()
+  } catch (err: any) {
+    console.error("Erreur suppression:", err)
+    // Afficher l'erreur dans le modal si disponible
+    if (err.response?.data?.error) {
+      deleteError.value = err.response.data.error
+    } else {
+      deleteError.value = "Une erreur est survenue lors de la suppression"
+    }
+  }
+}
+
+const deleteError = ref('')
 
 
 onMounted(fetchMessages)
@@ -195,5 +242,57 @@ onMounted(fetchMessages)
 <style scoped>
 .card-body.border-bottom {
   border-bottom: 1px solid #dee2e6;
+}
+
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.modal-custom {
+  background: #fff;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 95%;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header,
+.modal-footer {
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  border-bottom: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.notification-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>

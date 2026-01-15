@@ -49,17 +49,12 @@ public String addSolde(
     }
 
     BigDecimal montantBD = new BigDecimal(montant);
-    String methode = "addsolde";
 
-    Solde solde = soldeService.addSoldeEtEnvoyerTransaction(
-            token,
-            montantBD,
-            methode
-    );
+    Solde solde = soldeService.addSolde(token, montantBD);
 
     model.addAttribute("userId", solde.getUserId());
     model.addAttribute("montant", solde.getMontant());
-    model.addAttribute("success", "Solde ajouté et transaction envoyée");
+    model.addAttribute("success", "Solde ajouté avec succès. Nouveau solde: " + solde.getMontant());
 
     return "dashboard";
 }

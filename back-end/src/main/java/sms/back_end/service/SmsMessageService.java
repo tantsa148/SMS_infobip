@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import sms.back_end.entity.SmsMessage;
+import sms.back_end.exception.NotFoundException;
 import sms.back_end.repository.SmsMessageRepository;
 
 @Service
@@ -82,8 +83,14 @@ public class SmsMessageService {
         return repository.save(message);
     }).orElseThrow(() -> new RuntimeException("Message non trouvé"));
 }
-    // DELETE
-    public void deleteMessage(Long id) {
-        repository.deleteById(id);
+
+    // DELETE - Cette version simple suffit maintenant
+public void deleteMessage(Long id) {
+    if (!repository.existsById(id)) {
+        throw new NotFoundException("Message avec l'ID " + id + " n'existe pas");
     }
+    repository.deleteById(id);
+    // Si le message est lié à un événement, DataIntegrityViolationException 
+    // sera automatiquement attrapée par GlobalExceptionHandler
+}
 }

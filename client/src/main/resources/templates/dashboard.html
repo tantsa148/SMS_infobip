@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Ajouter Solde</title>
+    <title>Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,14 +12,19 @@
     <div class="container container-with-sidebar">
         <div th:replace="~{fragments/sidebar :: sidebar}"></div>
         <div class="main-content">
-            <h1>Ajouter du solde</h1>
-
-            <form th:action="@{/solde}" method="post">
-                <input type="hidden" name="token" th:value="${token}"/>
-                <label>Montant à ajouter :</label>
-                <input type="text" name="montant" required/>
-                <button type="submit">Ajouter</button>
-            </form>
+            <h1>Bienvenue</h1>
+            
+            <!-- Affichage du solde -->
+            <div class="solde-card">
+                <h2>Votre Solde</h2>
+                <p class="solde-amount" th:text="${solde + ' €'}">0.00 €</p>
+            </div>
+            
+            <p>Sélectionnez une option dans le menu pour continuer.</p>
+            
+            <!-- Messages de succès/erreur -->
+            <div th:if="${success}" class="success-message" th:text="${success}"></div>
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
         </div>
     </div>
 </body>

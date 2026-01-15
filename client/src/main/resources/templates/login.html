@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Connexion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
 <body>
@@ -27,15 +31,13 @@
                    required />
         </div>
 
-        <button type="submit"
-                th:disabled="${loading}">
+        <button type="submit" th:disabled="${loading}">
             <span th:text="${loading} ? 'Connexion...' : 'Se connecter'"></span>
         </button>
     </form>
 
-    <!-- Message d’erreur -->
-    <p th:if="${error}" class="error"
-       th:text="${error}"></p>
+    <!-- Message d'erreur -->
+    <p th:if="${error}" class="error" th:text="${error}"></p>
 </div>
 
 </body>

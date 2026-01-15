@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="sidebar" class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a th:href="@{/dashboard}">Dashboard</a></li>
+            <li><a th:href="@{/retrait}">Retrait</a></li>
+            <li><a th:href="@{/virement}">Virement</a></li>
+        </ul>
+    </div>
+</body>
+</html>
+

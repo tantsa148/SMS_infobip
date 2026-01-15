@@ -1,5 +1,9 @@
 package sms.client.service;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -12,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 
 import sms.client.dto.destinataire.NumeroDestinataireRequestDTO;
 import sms.client.dto.destinataire.NumeroDestinataireResponseDTO;
-
 @Service
 public class NumeroDestinataireService {
 
@@ -108,5 +111,44 @@ public NumeroDestinataireResponseDTO getFirstNumeroByUserId(Long userId, String 
         return null;
     }
 }
+public List<NumeroDestinataireResponseDTO> getAllNumeros(String jwtToken) {
+    
+    String url = "http://localhost:8080/api/numeros-destinataire";
 
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setBearerAuth(jwtToken);
+
+    HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+    try {
+        logger.info("Envoi de la requête GET pour récupérer tous les numéros destinataires");
+
+        ResponseEntity<NumeroDestinataireResponseDTO[]> response =
+                restTemplate.exchange(
+                        url,
+                        org.springframework.http.HttpMethod.GET,
+                        entity,
+                        NumeroDestinataireResponseDTO[].class
+                );
+
+        NumeroDestinataireResponseDTO[] numerosArray = response.getBody();
+
+        if (numerosArray != null && numerosArray.length > 0) {
+            List<NumeroDestinataireResponseDTO> numeros = Arrays.asList(numerosArray);
+            logger.info("Nombre de numéros récupérés : {}", numeros.size());
+            return numeros;
+        } else {
+            logger.warn("Aucun numéro destinataire trouvé");
+            return Collections.emptyList();
+        }
+
+    } catch (HttpClientErrorException e) {
+        logger.error("Erreur API lors de la récupération des numéros: {}", e.getResponseBodyAsString(), e);
+        return Collections.emptyList();
+    } catch (Exception e) {
+        logger.error("Erreur inattendue lors de la récupération des numéros", e);
+        return Collections.emptyList();
+    }
+}
 }

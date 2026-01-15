@@ -15,5 +15,10 @@ export default {
         id: payload.evenementId
       }
     })
+  },
+
+  // 🔹 Supprimer un message par ID
+  delete(id: number): Promise<{ data: void }> {
+    return api.delete(`/api/messages/${id}`)
   }
 }

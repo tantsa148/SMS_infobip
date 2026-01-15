@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <!-- CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/login.css}">
 </head>
 <body>
@@ -18,12 +20,11 @@
     <!-- Message erreur -->
     <p th:if="${error}" class="error" th:text="${error}"></p>
 
-    <!-- ✅ Ajout de th:object pour binder le formulaire -->
+    <!-- Formulaire -->
     <form th:action="@{/register}" th:object="${registerForm}" method="post">
 
-
-    <input type="hidden" th:field="*{idNumeroExpediteur}" />
-    <input type="hidden" th:field="*{idMessage}" />
+        <input type="hidden" th:field="*{idNumeroExpediteur}" />
+        <input type="hidden" th:field="*{idMessage}" />
 
         <!-- Username -->
         <div>
@@ -82,3 +83,4 @@
 
 </body>
 </html>
+

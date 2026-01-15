@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Ajouter Solde</title>
+    <title>Retrait</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,13 +12,13 @@
     <div class="container container-with-sidebar">
         <div th:replace="~{fragments/sidebar :: sidebar}"></div>
         <div class="main-content">
-            <h1>Ajouter du solde</h1>
+            <h1>Effectuer un retrait</h1>
 
-            <form th:action="@{/solde}" method="post">
+            <form th:action="@{/retrait}" method="post">
                 <input type="hidden" name="token" th:value="${token}"/>
-                <label>Montant à ajouter :</label>
+                <label>Montant à retirer :</label>
                 <input type="text" name="montant" required/>
-                <button type="submit">Ajouter</button>
+                <button type="submit">Retirer</button>
             </form>
         </div>
     </div>
