@@ -7,6 +7,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+        }
+        .modal-buttons {
+            margin-top: 20px;
+        }
+        .btn-confirm {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-cancel {
+            background-color: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-confirm:hover {
+            background-color: #c62828;
+        }
+        .btn-cancel:hover {
+            background-color: #757575;
+        }
+    </style>
 </head>
 <body>
     <div class="container container-with-sidebar">
@@ -14,14 +61,54 @@
         <div class="main-content">
             <h1>Effectuer un retrait</h1>
 
-            <form th:action="@{/retrait}" method="post">
+            <form id="retraitForm" th:action="@{/retrait}" method="post">
                 <input type="hidden" name="token" th:value="${token}"/>
                 <label>Montant à retirer :</label>
-                <input type="text" name="montant" required/>
-                <button type="submit">Retirer</button>
+                <input type="text" id="montantInput" name="montant" required/>
+                <button type="button" onclick="showConfirmation()">Retirer</button>
             </form>
         </div>
     </div>
+
+    <!-- Modal de confirmation -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmation de retrait</h2>
+            <p>Êtes-vous sûr de vouloir effectuer un retrait de <span id="montantDisplay"></span> ?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="hideConfirmation()">Annuler</button>
+                <button class="btn-confirm" onclick="submitForm()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showConfirmation() {
+            var montant = document.getElementById('montantInput').value;
+            if (!montant || montant.trim() === '') {
+                alert('Veuillez entrer un montant');
+                return;
+            }
+            document.getElementById('montantDisplay').textContent = montant;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function hideConfirmation() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function submitForm() {
+            document.getElementById('retraitForm').submit();
+        }
+
+        // Fermer le modal si on clique en dehors
+        window.onclick = function(event) {
+            var modal = document.getElementById('confirmModal');
+            if (event.target == modal) {
+                hideConfirmation();
+            }
+        }
+    </script>
 </body>
 </html>
 

@@ -18,3 +18,4 @@ public class RestTemplateConfig {
         return WebClient.builder();
     }
 }
+

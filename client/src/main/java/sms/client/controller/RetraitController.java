@@ -38,29 +38,34 @@ public class RetraitController {
 
     // TRAITEMENT DU RETRAIT
     @PostMapping("/retrait")
-    public String traiterRetrait(
-            @RequestParam String montant,
-            HttpSession session,
-            Model model
-    ) {
-        String token = (String) session.getAttribute("JWT_TOKEN");
+public String traiterRetrait(
+        @RequestParam String montant,
+        HttpSession session,
+        Model model
+) {
+    String token = (String) session.getAttribute("JWT_TOKEN");
 
-        if (token == null) {
-            return "redirect:/login";
-        }
-        String methodName = "traiterRetrait";
-        try {
-            BigDecimal montantBD = new BigDecimal(montant);
-            Solde solde = retraitService.retirerSolde(token, montantBD);
-            
-            model.addAttribute("success", "Retrait de " + montant + " effectué avec succès. Nouveau solde: " + solde.getMontant());
-            return "dashboard";
-            
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("token", token);
-            return "retrait";
-        }
+    if (token == null) {
+        return "redirect:/login";
     }
+    
+    // Récupérer automatiquement le nom de la méthode
+    // Note: "traiterRetrait" est le nom de la méthode courante
+    // Pour vérifier un modèle, utilisez un nom de méthode qui existe dans la base
+    String methodName = "traiterRetrait"; // ou un autre nom de méthode de modèle
+    
+    try {
+        BigDecimal montantBD = new BigDecimal(montant);
+        Solde solde = retraitService.retirerSolde(token, montantBD, methodName);
+        
+        model.addAttribute("success", "Retrait de " + montant + " effectué avec succès. Nouveau solde: " + solde.getMontant());
+        return "dashboard";
+        
+    } catch (Exception e) {
+        model.addAttribute("error", e.getMessage());
+        model.addAttribute("token", token);
+        return "retrait";
+    }
+}
 }
 
