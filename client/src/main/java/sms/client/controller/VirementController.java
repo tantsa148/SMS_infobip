@@ -47,9 +47,12 @@ public class VirementController {
             return "redirect:/login";
         }
 
+        // Nom de la méthode du controller pour la vérification du modèle
+        String methodName = "traiterVirement";
+        
         try {
             BigDecimal montantBD = new BigDecimal(montant);
-            Solde solde = virementService.effectuerVirement(token, montantBD, destinataire);
+            Solde solde = virementService.effectuerVirement(token, montantBD, destinataire, methodName);
             
             model.addAttribute("success", "Virement de " + montant + " vers " + destinataire + " effectué avec succès.");
             return "dashboard";

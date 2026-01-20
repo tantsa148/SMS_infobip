@@ -96,6 +96,15 @@ http://localhost:8080/api/transactions/envoyer-sms
   "reference": "TXN2026010612345",
   "montant": 75000.00
 }
+POST http://localhost:8080/api/transactions/envoyer-sms-avec-numero
+{
+    "idNumeroExpediteur": 48,
+    "idNumeroDestinataire": 40,
+    "idMessage": 12,
+    "reference": "TRX-2024-001",
+    "montant": 2500.50,
+    "numero": "0612345678"
+}
 
 
 

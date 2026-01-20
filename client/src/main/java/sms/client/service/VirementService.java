@@ -2,183 +2,217 @@ package sms.client.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import sms.client.dto.destinataire.NumeroDestinataireResponseDTO;
+import sms.client.dto.modele.ModeleMessageDTO;
+import sms.client.dto.transaction.TransactionAvecNumeroRequestDTO;
+import sms.client.dto.transaction.TransactionResponseDTO;
 import sms.client.entity.Solde;
+import sms.client.repository.SoldeRepository;
 import sms.client.security.JwtUtilsClient;
 
 @Service
 public class VirementService {
 
-    private static final Logger logger = LoggerFactory.getLogger(VirementService.class);
-
-    private final RetraitService retraitService;
-    private final SoldeService soldeService;
-    private final NumeroDestinataireService numeroDestinataireService;
+    private final SoldeRepository soldeRepository;
     private final JwtUtilsClient jwtUtilsClient;
+    private final NumeroDestinataireService numeroDestinataireService;
+    private final ModeleMessageClientService modeleMessageClientService;
+    private final TransactionClientService transactionClientService;
 
     public VirementService(
-            RetraitService retraitService,
-            SoldeService soldeService,
+            SoldeRepository soldeRepository,
+            JwtUtilsClient jwtUtilsClient,
             NumeroDestinataireService numeroDestinataireService,
-            JwtUtilsClient jwtUtilsClient
+            ModeleMessageClientService modeleMessageClientService,
+            TransactionClientService transactionClientService
     ) {
-        this.retraitService = retraitService;
-        this.soldeService = soldeService;
-        this.numeroDestinataireService = numeroDestinataireService;
+        this.soldeRepository = soldeRepository;
         this.jwtUtilsClient = jwtUtilsClient;
+        this.numeroDestinataireService = numeroDestinataireService;
+        this.modeleMessageClientService = modeleMessageClientService;
+        this.transactionClientService = transactionClientService;
     }
 
     /**
-     * EFFECTUER UN VIREMENT
+     * Effectuer un virement d'un utilisateur à un autre
      * @param token JWT token de l'expéditeur
      * @param montant Montant à virer
-     * @param numeroRecepteur Numéro du destinataire
-     * @param methodName Nom de la méthode appelante (optionnel)
-     * @return Solde de l'expéditeur après le virement
+     * @param numero Numéro du destinataire
+     * @param methodName Nom de la méthode appelante (du controller)
+     * @return Le solde de l'expéditeur après le virement
      */
     @Transactional
-    public Solde effectuerVirement(String token, BigDecimal montant, String numeroRecepteur, String methodName) {
+    public Solde effectuerVirement(String token, BigDecimal montant, String numero, String methodName) {
         
-        logger.info("===========================================");
-        logger.info("DÉBUT DU VIREMENT");
-        if (methodName != null) {
-            logger.info("Méthode appelante : {}", methodName);
-        }
-        logger.info("===========================================");
+        System.out.println("===========================================");
+        System.out.println("Méthode appelante : " + methodName);
+        System.out.println("===========================================");
         
+        Long userId = jwtUtilsClient.getUserIdFromToken(token);
+    
         // 1. Valider le montant
         if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
-            logger.error("Montant invalide : {}", montant);
             throw new IllegalArgumentException("Le montant doit être supérieur à 0");
         }
-        logger.info("Montant à virer : {}", montant);
+        System.out.println("Montant à virer : " + montant);
         
-        // 2. Récupérer l'ID de l'expéditeur
-        Long expediteurId = jwtUtilsClient.getUserIdFromToken(token);
-        logger.info("ID Expéditeur : {}", expediteurId);
+        // 2. Récupérer le premier numéro de l'expéditeur
+        NumeroDestinataireResponseDTO numeroExpediteur = numeroDestinataireService.getFirstNumeroByUserId(userId, token);
+        System.out.println("ID Numero expéditeur : " + (numeroExpediteur != null ? numeroExpediteur.getIdNumero() : "null"));
         
-        // 3. Valider le numéro récepteur
-        if (numeroRecepteur == null || numeroRecepteur.trim().isEmpty()) {
-            logger.error("Numéro récepteur vide ou null");
-            throw new IllegalArgumentException("Le numéro du récepteur est obligatoire");
+        if (numeroExpediteur == null) {
+            throw new RuntimeException("Aucun numéro expéditeur trouvé pour l'utilisateur " + userId);
         }
-        logger.info("Numéro récepteur : {}", numeroRecepteur);
+        
+        // 3. Valider le numéro
+        if (numero == null || numero.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le numéro du destinataire est obligatoire");
+        }
+        System.out.println("Numéro : " + numero);
         
         // 4. Récupérer tous les numéros destinataires
-        logger.info("Récupération de la liste des numéros destinataires...");
+        System.out.println("Récupération de la liste des numéros destinataires...");
         List<NumeroDestinataireResponseDTO> tousNumeros = numeroDestinataireService.getAllNumeros(token);
         
         if (tousNumeros == null || tousNumeros.isEmpty()) {
-            logger.error("Aucun numéro destinataire trouvé dans la base");
             throw new RuntimeException("Aucun numéro destinataire disponible");
         }
-        logger.info("Nombre de numéros trouvés : {}", tousNumeros.size());
+        System.out.println("Nombre de numéros trouvés : " + tousNumeros.size());
         
         // 5. Rechercher le numéro du destinataire
         NumeroDestinataireResponseDTO numeroTrouve = tousNumeros.stream()
-                .filter(n -> n.getValeur() != null && n.getValeur().equals(numeroRecepteur))
+                .filter(n -> n.getValeur() != null && n.getValeur().equals(numero))
                 .findFirst()
-                .orElseThrow(() -> {
-                    logger.error("Numéro destinataire non trouvé : {}", numeroRecepteur);
-                    return new RuntimeException("Le numéro destinataire " + numeroRecepteur + " n'existe pas dans le système");
-                });
+                .orElseThrow(() -> new RuntimeException("Le numéro " + numero + " n'existe pas dans le système"));
         
-        logger.info("Numéro destinataire trouvé : ID={}, Valeur={}", numeroTrouve.getIdNumero(), numeroTrouve.getValeur());
+        System.out.println("Numéro destinataire trouvé : ID=" + numeroTrouve.getIdNumero() + ", Valeur=" + numeroTrouve.getValeur());
         
         // 6. Vérifier que le numéro est associé à un utilisateur
         if (numeroTrouve.getIdUser() == null) {
-            logger.error("Aucun utilisateur associé au numéro : {}", numeroRecepteur);
-            throw new RuntimeException("Le numéro " + numeroRecepteur + " n'est associé à aucun utilisateur");
+            throw new RuntimeException("Le numéro " + numero + " n'est associé à aucun utilisateur");
         }
         
         Long destinataireId = numeroTrouve.getIdUser().longValue();
-        logger.info("ID Destinataire : {}", destinataireId);
+        System.out.println("ID Destinataire : " + destinataireId);
         
         // 7. Vérifier que l'expéditeur n'envoie pas à lui-même
-        if (expediteurId.equals(destinataireId)) {
-            logger.error("Tentative de virement vers soi-même : userId={}", expediteurId);
+        if (userId.equals(destinataireId)) {
             throw new RuntimeException("Vous ne pouvez pas effectuer un virement vers votre propre compte");
         }
         
         // 8. Débiter le compte de l'expéditeur
-        logger.info("Débit du compte expéditeur (ID: {}) de {} ...", expediteurId, montant);
-        Solde soldeExpediteur = retraitService.retirerSolde(token, montant, methodName != null ? methodName : "effectuerVirement");
-        logger.info("Nouveau solde expéditeur : {}", soldeExpediteur.getMontant());
+        System.out.println("Débit du compte expéditeur (ID: " + userId + ") de " + montant + " ...");
+        Solde soldeExpediteur = soldeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Solde non trouvé pour l'expéditeur " + userId));
+        
+        if (soldeExpediteur.getMontant().compareTo(montant) < 0) {
+            throw new RuntimeException("Solde insuffisant. Solde actuel: " + soldeExpediteur.getMontant());
+        }
+        
+        soldeExpediteur.setMontant(soldeExpediteur.getMontant().subtract(montant));
+        Solde soldeExpediteurSauvegarde = soldeRepository.save(soldeExpediteur);
+        System.out.println("Nouveau solde expéditeur : " + soldeExpediteurSauvegarde.getMontant());
         
         // 9. Créditer le compte du destinataire
-        logger.info("Crédit du compte destinataire (ID: {}) de {} ...", destinataireId, montant);
-        Solde soldeDestinataire = soldeService.addSoldeByUserId(destinataireId, montant);
-        logger.info("Nouveau solde destinataire : {}", soldeDestinataire.getMontant());
-        
-        // 10. Résumé de l'opération
-        logger.info("===========================================");
-        logger.info("VIREMENT EFFECTUÉ AVEC SUCCÈS");
-        logger.info("Expéditeur (ID: {}) - Montant débité: {} - Nouveau solde: {}", 
-                    expediteurId, montant, soldeExpediteur.getMontant());
-        logger.info("Destinataire (ID: {}) - Montant crédité: {} - Nouveau solde: {}", 
-                    destinataireId, montant, soldeDestinataire.getMontant());
-        logger.info("===========================================");
-        
-        return soldeExpediteur;
-    }
-    
-    /**
-     * Surcharge pour appeler sans methodName
-     */
-    @Transactional
-    public Solde effectuerVirement(String token, BigDecimal montant, String numeroRecepteur) {
-        return effectuerVirement(token, montant, numeroRecepteur, null);
-    }
-
-    /**
-     * OBTENIR L'ID UTILISATEUR PAR NUMÉRO
-     * @param token JWT token
-     * @param numero Numéro à rechercher
-     * @return ID de l'utilisateur associé au numéro
-     */
-    public Long getUserIdByNumero(String token, String numero) {
-        
-        logger.info("Recherche de l'utilisateur pour le numéro : {}", numero);
-        
-        // Valider le numéro
-        if (numero == null || numero.trim().isEmpty()) {
-            logger.error("Numéro vide ou null");
-            throw new IllegalArgumentException("Le numéro est obligatoire");
-        }
-        
-        // Récupérer tous les numéros
-        List<NumeroDestinataireResponseDTO> tousNumeros = numeroDestinataireService.getAllNumeros(token);
-        
-        if (tousNumeros == null || tousNumeros.isEmpty()) {
-            logger.error("Aucun numéro destinataire trouvé");
-            throw new RuntimeException("Aucun numéro destinataire disponible");
-        }
-        
-        // Rechercher le numéro
-        NumeroDestinataireResponseDTO numeroTrouve = tousNumeros.stream()
-                .filter(n -> n.getValeur() != null && n.getValeur().equals(numero))
-                .findFirst()
-                .orElseThrow(() -> {
-                    logger.error("Numéro non trouvé : {}", numero);
-                    return new RuntimeException("Numéro non trouvé: " + numero);
+        System.out.println("Crédit du compte destinataire (ID: " + destinataireId + ") de " + montant + " ...");
+        Solde soldeDestinataire = soldeRepository.findByUserId(destinataireId)
+                .orElseGet(() -> {
+                    Solde s = new Solde();
+                    s.setUserId(destinataireId);
+                    s.setMontant(BigDecimal.ZERO);
+                    return soldeRepository.save(s);
                 });
         
-        // Vérifier l'association utilisateur
-        if (numeroTrouve.getIdUser() == null) {
-            logger.error("Aucun utilisateur associé au numéro : {}", numero);
-            throw new RuntimeException("Aucun utilisateur associé au numéro: " + numero);
+        soldeDestinataire.setMontant(soldeDestinataire.getMontant().add(montant));
+        Solde soldeDestinataireSauvegarde = soldeRepository.save(soldeDestinataire);
+        System.out.println("Nouveau solde destinataire : " + soldeDestinataireSauvegarde.getMontant());
+        
+        // 10. Vérifier si un modèle existe pour cette méthode et envoyer la transaction SMS
+        ModeleMessageDTO modele = modeleMessageClientService.findByMethode(methodName, token);
+        if (modele != null) {
+            System.out.println("Modèle trouvé pour la méthode : " + methodName);
+            System.out.println("Envoi de la transaction SMS...");
+            
+            // Créer le DTO de transaction
+            TransactionAvecNumeroRequestDTO transactionRequest = new TransactionAvecNumeroRequestDTO();
+            transactionRequest.setIdNumeroExpediteur(modele.getIdExpediteur());
+            transactionRequest.setIdNumeroDestinataire(numeroExpediteur.getIdNumero());
+            transactionRequest.setIdMessage(modele.getIdMessage());
+            transactionRequest.setReference("REF-VIREMENT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            transactionRequest.setMontant(montant.doubleValue());
+            transactionRequest.setNumero(numero);
+            
+            System.out.println("Transaction Request : " + transactionRequest);
+            
+            try {
+                // Envoyer la transaction
+                TransactionResponseDTO transactionResponse = 
+                    transactionClientService.envoyerTransactionAvecNumero(transactionRequest, token);
+                
+                System.out.println("Transaction SMS envoyée avec succès : " + transactionResponse);
+            } catch (Exception e) {
+                System.err.println("Erreur lors de l'envoi de la transaction SMS : " + e.getMessage());
+                // On ne fait pas échouer le virement si l'envoi du SMS échoue
+            }
+        } else {
+            System.out.println("Aucun modèle trouvé pour la méthode : " + methodName);
         }
         
-        Long userId = numeroTrouve.getIdUser().longValue();
-        logger.info("Utilisateur trouvé : ID={} pour le numéro {}", userId, numero);
+        // 11. Résumé de l'opération
+        System.out.println("===========================================");
+        System.out.println("VIREMENT EFFECTUÉ AVEC SUCCÈS");
+        System.out.println("Expéditeur (ID: " + userId + ") - Montant débité: " + montant + " - Nouveau solde: " + soldeExpediteurSauvegarde.getMontant());
+        System.out.println("Destinataire (ID: " + destinataireId + ") - Montant crédité: " + montant + " - Nouveau solde: " + soldeDestinataireSauvegarde.getMontant());
+        System.out.println("===========================================");
         
-        return userId;
+        return soldeExpediteurSauvegarde;
+    }
+
+    /**
+     * Débiter le compte de l'utilisateur connecté (sans virement)
+     * @param token JWT token de l'utilisateur
+     * @param montant Montant à débiter
+     * @param methodName Nom de la méthode appelante (du controller)
+     * @return Le solde mis à jour
+     */
+    @Transactional
+    public Solde debiterCompte(String token, BigDecimal montant, String methodName) {
+        
+        System.out.println("===========================================");
+        System.out.println("Méthode appelante : " + methodName);
+        System.out.println("===========================================");
+        
+        // Vérifier si un modèle existe pour cette méthode
+        ModeleMessageDTO modele = modeleMessageClientService.findByMethode(methodName, token);
+        if (modele != null) {
+            System.out.println("oui");
+        } else {
+            System.out.println("non");
+        }
+        
+        Long userId = jwtUtilsClient.getUserIdFromToken(token);
+        System.out.println("User ID : " + userId);
+        System.out.println("Montant à débiter : " + montant);
+        
+        Solde solde = soldeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Solde non trouvé pour l'utilisateur " + userId));
+        
+        System.out.println("Solde actuel : " + solde.getMontant());
+        
+        if (solde.getMontant().compareTo(montant) < 0) {
+            throw new RuntimeException("Solde insuffisant. Solde actuel: " + solde.getMontant() + ", Montant demandé: " + montant);
+        }
+        
+        BigDecimal nouveauSolde = solde.getMontant().subtract(montant);
+        solde.setMontant(nouveauSolde);
+        
+        System.out.println("Nouveau solde : " + nouveauSolde);
+        
+        return soldeRepository.save(solde);
     }
 }
-

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sms.back_end.dto.TransactionSmsAvecNumeroRequestDTO;
 import sms.back_end.dto.TransactionSmsRequestDTO;
 import sms.back_end.dto.TransactionSmsResponseDTO;
 import sms.back_end.service.EvenementTransactionService;
@@ -38,6 +39,43 @@ public class TransactionController {
                     new TransactionSmsResponseDTO(
                             "SUCCESS",
                             "Transaction envoyée avec succès",
+                            request.getReference()
+                    );
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+
+            TransactionSmsResponseDTO response =
+                    new TransactionSmsResponseDTO(
+                            "ERROR",
+                            e.getMessage(),
+                            request.getReference()
+                    );
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/envoyer-sms-avec-numero")
+    public ResponseEntity<TransactionSmsResponseDTO> envoyerSmsTransactionAvecNumero(
+            @RequestBody TransactionSmsAvecNumeroRequestDTO request
+    ) {
+
+        try {
+            transactionService.envoyerSmsTransactionComplet(
+                    request.getIdNumeroExpediteur(),
+                    request.getIdNumeroDestinataire(),
+                    request.getIdMessage(),
+                    request.getReference(),
+                    request.getMontant(),
+                    request.getNumero()
+            );
+
+            TransactionSmsResponseDTO response =
+                    new TransactionSmsResponseDTO(
+                            "SUCCESS",
+                            "Transaction envoyée avec succès (avec numero)",
                             request.getReference()
                     );
 
