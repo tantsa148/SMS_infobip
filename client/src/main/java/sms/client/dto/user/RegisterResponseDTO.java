@@ -5,6 +5,7 @@ public class RegisterResponseDTO {
     private boolean success;
     private String message;
     private UserDTO user;
+    private Long idMessageEnvoye;
 
     // getters & setters
     public boolean isSuccess() { return success; }
@@ -15,6 +16,9 @@ public class RegisterResponseDTO {
 
     public UserDTO getUser() { return user; }
     public void setUser(UserDTO user) { this.user = user; }
+
+    public Long getIdMessageEnvoye() { return idMessageEnvoye; }
+    public void setIdMessageEnvoye(Long idMessageEnvoye) { this.idMessageEnvoye = idMessageEnvoye; }
 
     // DTO interne pour l'utilisateur
     public static class UserDTO {

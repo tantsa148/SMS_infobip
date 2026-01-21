@@ -87,6 +87,11 @@ http://localhost:8080/api/otp/send
   "idNumeroDestinataire":1,
   "idMessage":3
 }
+http://localhost:8080/api/otp/verify
+{
+  "idMessageEnvoye":54,
+  "code":"636572"
+}
 
 http://localhost:8080/api/transactions/envoyer-sms
 {

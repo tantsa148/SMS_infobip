@@ -12,6 +12,7 @@ import sms.client.dto.plateforme.PlateformeDTO;
 import sms.client.dto.user.RegisterFormDTO;
 import sms.client.dto.user.RegisterResponseDTO;
 import sms.client.service.AuthRegisterService;
+import sms.client.service.OtpService;
 import sms.client.service.PlateformeService;
 
 @Controller
@@ -19,13 +20,15 @@ public class RegisterController {
 
     private final AuthRegisterService authRegisterService;
     private final PlateformeService plateformeService;
-
+  
     public RegisterController(
             AuthRegisterService authRegisterService,
-            PlateformeService plateformeService) {
+            PlateformeService plateformeService,
+            OtpService otpService) {
 
         this.authRegisterService = authRegisterService;
         this.plateformeService = plateformeService;
+
     }
 
     /* =======================
@@ -70,6 +73,10 @@ public class RegisterController {
 
         if (response != null && response.isSuccess()) {
             model.addAttribute("success", response.getMessage());
+            // Passer l'idMessageEnvoye pour la vérification OTP
+            if (response.getIdMessageEnvoye() != null) {
+                model.addAttribute("idMessageEnvoye", response.getIdMessageEnvoye());
+            }
         } else {
             model.addAttribute(
                     "error",
@@ -81,4 +88,5 @@ public class RegisterController {
 
         return "register";
     }
+
 }

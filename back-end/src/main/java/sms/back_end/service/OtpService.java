@@ -37,9 +37,10 @@ public class OtpService {
     /**
      * Génère un OTP, l'injecte dans le message existant et l'envoie par SMS.
      * Ne crée PAS de nouveau message en base.
+     * @return l'id du message envoyé
      */
     @Transactional
-    public void generateAndSendOtp(Long idNumeroExpediteur,
+    public Long generateAndSendOtp(Long idNumeroExpediteur,
                                    Long idNumeroDestinataire,
                                    Long idMessage) {
 
@@ -51,7 +52,7 @@ public class OtpService {
         SmsMessage templateMessage = smsMessageService.getMessageById(idMessage)
                 .orElseThrow(() -> new RuntimeException("Template OTP introuvable"));
 
-        // 3️⃣ Remplacer {{code}} par l’OTP
+        // 3️⃣ Remplacer {{code}} par l'OTP
         String texteFinal = templateMessage.getTexte().replace("{{code}}", otpCode);
 
         // 4️⃣ Préparer la requête SMS
@@ -76,45 +77,49 @@ public class OtpService {
         otp.setDateExpiration(LocalDateTime.now().plusMinutes(5));
 
         otpRepo.save(otp);
+
+        // Retourner l'id du message envoyé
+        return messageEnvoye.getId();
     }
 
     /**
      * Vérifie un OTP.
      */
-@Transactional
-public boolean verifyOtp(Long idMessageEnvoye, String code) throws OtpInvalidException {
+    @Transactional
+    public boolean verifyOtp(Long idMessageEnvoye, String code) throws OtpInvalidException {
 
-    Otp otp = otpRepo.findByIdMessageEnvoye(idMessageEnvoye)
-            .orElseThrow(() -> new RuntimeException("OTP introuvable"));
+        Otp otp = otpRepo.findByIdMessageEnvoye(idMessageEnvoye)
+                .orElseThrow(() -> new RuntimeException("OTP introuvable"));
 
-    if (!"PENDING".equals(otp.getStatut())) {
-        throw new OtpInvalidException("OTP déjà utilisé ou expiré");
-    }
-
-    if (otp.getDateExpiration().isBefore(LocalDateTime.now())) {
-        otp.setStatut("EXPIRED");
-        otpRepo.save(otp);
-        throw new OtpInvalidException("OTP expiré");
-    }
-
-    if (!passwordEncoder.matches(code, otp.getCodeHash())) {
-
-        otp.setTentative(otp.getTentative() + 1);
-
-        if (otp.getTentative() >= otp.getMaxTentative()) {
-            otp.setStatut("EXPIRED");
+        if (!"PENDING".equals(otp.getStatut())) {
+            throw new OtpInvalidException("OTP déjà utilisé ou expiré");
         }
 
-        otpRepo.save(otp); // ✅ CETTE FOIS C'EST BIEN COMMIT
+        if (otp.getDateExpiration().isBefore(LocalDateTime.now())) {
+            otp.setStatut("EXPIRED");
+            otpRepo.save(otp);
+            throw new OtpInvalidException("OTP expiré");
+        }
 
-        throw new OtpInvalidException(
-            "Code OTP incorrect (" + otp.getTentative() + "/" + otp.getMaxTentative() + ")"
-        );
+        if (!passwordEncoder.matches(code, otp.getCodeHash())) {
+
+            otp.setTentative(otp.getTentative() + 1);
+
+            if (otp.getTentative() >= otp.getMaxTentative()) {
+                otp.setStatut("EXPIRED");
+            }
+
+            otpRepo.save(otp);
+
+            throw new OtpInvalidException(
+                "Code OTP incorrect (" + otp.getTentative() + "/" + otp.getMaxTentative() + ")"
+            );
+        }
+
+        otp.setStatut("VERIFIED");
+        otpRepo.save(otp);
+
+        return true;
     }
-
-    otp.setStatut("VERIFIED");
-    otpRepo.save(otp);
-
-    return true;
 }
-}
+

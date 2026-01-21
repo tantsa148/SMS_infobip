@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification OTP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Vérification OTP</h1>
+        <p class="subtitle">Entrez le code reçu par SMS</p>
+
+        <!-- Formulaire de vérification -->
+        <form th:action="@{/otp/verify}" method="post" th:object="${otpVerifyRequest}">
+            <input type="hidden" th:field="*{idMessageEnvoye}" th:value="${idMessageEnvoye}" />
+            
+            <div class="form-group">
+                <label for="code">Code OTP (6 chiffres)</label>
+                <input 
+                    type="text" 
+                    id="code" 
+                    th:field="*{code}" 
+                    class="otp-input"
+                    placeholder="000000"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    required
+                    autofocus
+                />
+            </div>
+
+            <button 
+                type="submit" 
+                class="btn"
+              >  Vérifier le code
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a th:href="@{/otp/send}">← Retour à l'envoi de code</a>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus et validation du champ OTP
+        const otpInput = document.getElementById('code');
+        
+        if (otpInput && !otpInput.disabled) {
+            otpInput.addEventListener('input', function(e) {
+                // Accepter uniquement les chiffres
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Soumettre automatiquement si 6 chiffres sont entrés
+                if (this.value.length === 6) {
+                    this.form.submit();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
