@@ -7,6 +7,82 @@
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/global.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .modal-content h2 {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+        }
+        .modal-content p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 0 0 25px 0;
+        }
+        .modal-content .info-display {
+            color: #5B93C8;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-buttons button {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-family: 'Public Sans', sans-serif;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+        }
+        .btn-confirm {
+            background-color: #5B93C8;
+            color: white;
+        }
+        .btn-confirm:hover {
+            background-color: #5B93C8;
+            box-shadow: 0 4px 12px rgba(91, 147, 200, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-cancel {
+            background-color: #a8acb1ff;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background-color: #a8acb1ff;
+            box-shadow: 0 4px 12px rgba(168, 172, 177, 0.3);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
 <body>
     <div class="container container-with-sidebar">
@@ -14,16 +90,64 @@
         <div class="main-content">
             <h1>Effectuer un virement</h1>
 
-            <form th:action="@{/virement}" method="post">
+            <form id="virementForm" th:action="@{/virement}" method="post">
                 <input type="hidden" name="token" th:value="${token}"/>
                 <label>Montant à transférer :</label>
-                <input type="text" name="montant" required/>
+                <input type="text" id="montantInput" name="montant" required/>
                 <label>Numéro du destinataire :</label>
-                <input type="text" name="destinataire" required/>
-                <button type="submit">Transférer</button>
+                <input type="text" id="destinataireInput" name="destinataire" required/>
+                <button type="button" onclick="showConfirmation()">Transférer</button>
             </form>
         </div>
     </div>
+
+    <!-- Modal de confirmation -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmation de virement</h2>
+            <p>Êtes-vous sûr de vouloir transférer <span id="montantDisplay" class="info-display"></span> au numéro <span id="destinataireDisplay" class="info-display"></span> ?</p>
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="submitForm()">Confirmer</button>
+                <button class="btn-cancel" onclick="hideConfirmation()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showConfirmation() {
+            var montant = document.getElementById('montantInput').value;
+            var destinataire = document.getElementById('destinataireInput').value;
+            
+            if (!montant || montant.trim() === '') {
+                alert('Veuillez entrer un montant');
+                return;
+            }
+            if (!destinataire || destinataire.trim() === '') {
+                alert('Veuillez entrer un numéro de destinataire');
+                return;
+            }
+            
+            document.getElementById('montantDisplay').textContent = montant;
+            document.getElementById('destinataireDisplay').textContent = destinataire;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function hideConfirmation() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function submitForm() {
+            document.getElementById('virementForm').submit();
+        }
+
+        // Fermer le modal si on clique en dehors
+        window.onclick = function(event) {
+            var modal = document.getElementById('confirmModal');
+            if (event.target == modal) {
+                hideConfirmation();
+            }
+        }
+    </script>
 </body>
 </html>
 

@@ -1,0 +1,479 @@
+/* ==========================================
+   Styles globaux pour les formulaires
+   Inspiré du design login.css
+   ========================================== */
+
+/* Import de la police */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap');
+
+/* Reset et styles de base */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Public Sans', sans-serif !important;
+    background-color: #e8e8e8 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+}
+
+/* ==========================================
+   Conteneur principal des formulaires
+   ========================================== */
+.form-page {
+    width: 100%;
+    max-width: 380px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    text-align: center;
+    position: relative;
+    margin-top: 60px;
+    overflow: visible;
+}
+
+/* Titre du formulaire */
+.form-page h1 {
+    margin: 80px 0 30px 0;
+    font-size: 20px;
+    font-weight: 400;
+    color: #6c757d;
+    letter-spacing: 0.5px;
+}
+
+.form-page .subtitle {
+    margin: -20px 0 30px 0;
+    font-size: 14px;
+    color: #999;
+}
+
+/* ==========================================
+   Styles du formulaire
+   ========================================== */
+.form-page form {
+    padding: 0 40px 30px 40px;
+    position: relative;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Groupes de champs */
+.form-page form div {
+    margin-bottom: 20px;
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.form-page form label {
+    display: block;
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Champs de saisie */
+.form-page form input[type="text"],
+.form-page form input[type="password"],
+.form-page form input[type="number"],
+.form-page form input[type="email"],
+.form-page form select {
+    width: 100%;
+    padding: 15px 40px 15px 15px;
+    border: none;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: 'Public Sans', sans-serif;
+}
+
+.form-page form input:focus,
+.form-page form select:focus {
+    outline: none;
+    background-color: #ebebeb;
+    box-shadow: 0 0 0 2px rgba(91, 147, 200, 0.2);
+}
+
+.form-page form input::placeholder {
+    color: #999;
+}
+
+/* Select personnalisé */
+.form-page form select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* ==========================================
+   Boutons
+   ========================================== */
+.form-page form button,
+.form-page .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    background-color: #5B93C8;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 30px;
+    font-family: 'Public Sans', sans-serif;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 300px;
+}
+
+.form-page form button:hover,
+.form-page .btn:hover {
+    background-color: #4a7faf;
+    box-shadow: 0 4px 12px rgba(91, 147, 200, 0.3);
+    transform: translateX(-50%) translateY(-1px);
+}
+
+.form-page form button:active,
+.form-page .btn:active {
+    transform: translateX(-50%) translateY(0);
+}
+
+.form-page form button:disabled,
+.form-page .btn:disabled {
+    background-color: #a8c5e0;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Bouton secondaire */
+.form-page .btn-secondary {
+    background-color: #6c757d;
+}
+
+.form-page .btn-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* ==========================================
+   Messages de feedback
+   ========================================== */
+.error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #dc3545;
+    text-align: left;
+    margin: 20px 40px;
+    font-size: 14px;
+}
+
+.success {
+    color: #198754;
+    background-color: #d1e7dd;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #198754;
+    text-align: left;
+    margin: 20px 40px;
+    font-size: 14px;
+}
+
+/* ==========================================
+   Liens et navigation
+   ========================================== */
+.back-link {
+    margin-top: 20px;
+    padding: 0 40px 20px 40px;
+    text-align: center;
+}
+
+.back-link a {
+    color: #5B93C8;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.back-link a:hover {
+    color: #4a7faf;
+    text-decoration: underline;
+}
+
+/* ==========================================
+   Icônes dans les champs
+   ========================================== */
+.form-page form div::after {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #999;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+@media (max-width: 480px) {
+    .form-page {
+        max-width: 90%;
+        margin: 20px;
+    }
+    
+    .form-page form {
+        padding: 0 25px 30px 25px;
+    }
+}
+
+/* ==========================================
+   Styles spécifiques pour la vérification OTP
+   ========================================== */
+.otp-input {
+    text-align: center !important;
+    font-size: 24px !important;
+    letter-spacing: 8px !important;
+    font-weight: 600 !important;
+}
+
+.otp-input::placeholder {
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+/* ==========================================
+   Debug info (pour le débogage)
+   ========================================== */
+.debug-info {
+    margin: 15px 40px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #6c757d;
+    text-align: left;
+}
+
+.debug-info span:first-child {
+    font-weight: bold;
+}
+
+/* ==========================================
+   Footer
+   ========================================== */
+.form-page > p:last-child {
+    font-size: 11px;
+    color: #999;
+    margin: 0;
+    padding: 20px;
+    background-color: #fafafa;
+    border-top: 1px solid #f0f0f0;
+}
+
+
+/* Styles globaux pour l'application */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Public Sans', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Public Sans', sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* ==========================================
+   Conteneur principal avec sidebar
+   ========================================== */
+.container-with-sidebar {
+    display: flex;
+    min-height: 100vh;
+    max-width: 100%;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    margin-left: 250px;
+}
+
+.main-content h1 {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #5B93C8;
+}
+
+.main-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.main-content input[type="text"],
+.main-content input[type="number"],
+.main-content input[type="email"] {
+    padding: 12px 15px;
+    width: 100%;
+    max-width: 350px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Public Sans', sans-serif;
+    transition: all 0.3s ease;
+    background-color: #fff;
+}
+
+.main-content input:focus {
+    outline: none;
+    border-color: #5B93C8;
+    box-shadow: 0 0 0 3px rgba(91, 147, 200, 0.2);
+}
+
+.main-content button {
+    padding: 12px 24px;
+    background-color: #5B93C8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Public Sans', sans-serif;
+}
+
+.main-content button:hover {
+    background-color: #4a7faf;
+    box-shadow: 0 4px 12px rgba(91, 147, 200, 0.3);
+    transform: translateY(-1px);
+}
+
+.main-content button:active {
+    transform: translateY(0);
+}
+
+/* ==========================================
+   Cartes et éléments de contenu
+   ========================================== */
+.solde-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 400px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+}
+
+.solde-card h2 {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.solde-amount {
+    color: #5B93C8;
+    font-size: 42px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ==========================================
+   Messages de feedback
+   ========================================== */
+.success-message {
+    color: #198754;
+    background-color: #d1e7dd;
+    padding: 12px 20px;
+    border-radius: 6px;
+    border-left: 4px solid #198754;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    padding: 12px 20px;
+    border-radius: 6px;
+    border-left: 4px solid #dc3545;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.result {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+/* ==========================================
+   Responsive pour les pages avec sidebar
+   ========================================== */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .container-with-sidebar {
+        flex-direction: column;
+    }
+}
+

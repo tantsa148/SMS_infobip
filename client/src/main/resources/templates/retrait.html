@@ -26,32 +26,61 @@
             border-radius: 8px;
             text-align: center;
             max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .modal-content h2 {
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+        }
+        .modal-content p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 0 0 25px 0;
+        }
+        .modal-content .montant-display {
+            color: #5B93C8;
+            font-weight: 600;
+            font-size: 16px;
         }
         .modal-buttons {
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-buttons button {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-family: 'Public Sans', sans-serif;
+            transition: all 0.3s ease;
+            margin: 0 auto;
         }
         .btn-confirm {
-            background-color: #e53935;
+            background-color: #5B93C8;
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .btn-cancel {
-            background-color: #9e9e9e;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
         }
         .btn-confirm:hover {
-            background-color: #c62828;
+            background-color: #5B93C8;
+            box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+            transform: translateY(-1px);
+        }
+        .btn-cancel {
+            background-color: #a8acb1ff;
+            color: white;
         }
         .btn-cancel:hover {
-            background-color: #757575;
+            background-color: #a8acb1ff;
+            box-shadow: 0 4px 12px rgba(91, 147, 200, 0.3);
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -74,10 +103,11 @@
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <h2>Confirmation de retrait</h2>
-            <p>Êtes-vous sûr de vouloir effectuer un retrait de <span id="montantDisplay"></span> ?</p>
+            <p>Êtes-vous sûr de vouloir effectuer un retrait de <span id="montantDisplay" class="montant-display"></span> ?</p>
             <div class="modal-buttons">
-                <button class="btn-cancel" onclick="hideConfirmation()">Annuler</button>
                 <button class="btn-confirm" onclick="submitForm()">Confirmer</button>
+                <button class="btn-cancel" onclick="hideConfirmation()">Annuler</button>
+
             </div>
         </div>
     </div>

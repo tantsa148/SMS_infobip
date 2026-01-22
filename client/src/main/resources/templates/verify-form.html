@@ -7,25 +7,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/global.css}">
-    <link rel="stylesheet" th:href="@{/css/login.css}">
-    
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
 </head>
 <body>
-    <div class="container">
+    <div class="form-page">
         <h1>Vérification OTP</h1>
         <p class="subtitle">Entrez le code reçu par SMS</p>
 
+        <!-- Affichage de l'ID Message Envoyé (pour débogage) -->
+        <div th:if="${idMessageEnvoye}" class="debug-info">
+            <span>ID Message: </span>
+            <span th:text="${idMessageEnvoye}"></span>
+        </div>
+
         <!-- Formulaire de vérification -->
-        <form th:action="@{/otp/verify}" method="post" th:object="${otpVerifyRequest}">
-            <input type="hidden" th:field="*{idMessageEnvoye}" th:value="${idMessageEnvoye}" />
+        <form th:action="@{/otp/verify}" method="post">
+            <!-- Utiliser name directement avec la valeur du model -->
+            <input type="hidden" name="idMessageEnvoye" th:value="${idMessageEnvoye}" />
             
             <div class="form-group">
                 <label for="code">Code OTP (6 chiffres)</label>
                 <input 
                     type="text" 
                     id="code" 
-                    th:field="*{code}" 
+                    name="code"
                     class="otp-input"
                     placeholder="000000"
                     maxlength="6"
@@ -48,20 +53,8 @@
     </div>
 
     <script>
-        // Auto-focus et validation du champ OTP
-        const otpInput = document.getElementById('code');
-        
-        if (otpInput && !otpInput.disabled) {
-            otpInput.addEventListener('input', function(e) {
-                // Accepter uniquement les chiffres
-                this.value = this.value.replace(/[^0-9]/g, '');
-                
-                // Soumettre automatiquement si 6 chiffres sont entrés
-                if (this.value.length === 6) {
-                    this.form.submit();
-                }
-            });
-        }
+        // Désactiver la soumission automatique - soumission manuelle uniquement
+        console.log("Vérification OTP - Mode manuel activé");
     </script>
 </body>
 </html>

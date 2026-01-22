@@ -41,7 +41,7 @@ public class LoginController {
             session.setAttribute("JWT_TOKEN", response.getToken());
 
             // ✅ Redirection SANS exposer le token
-            return "redirect:/solde";
+            return "redirect:/dashboard";
 
         } else {
             // ❌ Login échoué

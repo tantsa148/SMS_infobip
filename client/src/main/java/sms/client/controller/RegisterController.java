@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import jakarta.servlet.http.HttpSession;
+
 import sms.client.dto.plateforme.PlateformeDTO;
 import sms.client.dto.user.RegisterFormDTO;
 import sms.client.dto.user.RegisterResponseDTO;
@@ -54,6 +56,7 @@ public class RegisterController {
     @PostMapping("/register")
     public String register(
             @ModelAttribute("registerForm") RegisterFormDTO form,
+            HttpSession session,
             Model model) {
 
         String controllerName =
@@ -72,10 +75,11 @@ public class RegisterController {
                 );
 
         if (response != null && response.isSuccess()) {
-            model.addAttribute("success", response.getMessage());
-            // Passer l'idMessageEnvoye pour la vérification OTP
+            // Rediriger vers la page OTP avec l'idMessageEnvoye
             if (response.getIdMessageEnvoye() != null) {
-                model.addAttribute("idMessageEnvoye", response.getIdMessageEnvoye());
+                return "redirect:/otp/verify?idMessageEnvoye=" + response.getIdMessageEnvoye();
+            } else {
+                model.addAttribute("error", "Erreur: ID de message non disponible");
             }
         } else {
             model.addAttribute(

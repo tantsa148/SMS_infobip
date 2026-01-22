@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sms.client.dto.destinataire.NumeroDestinataireResponseDTO;
 import sms.client.dto.modele.ModeleMessageDTO;
 import sms.client.dto.otp.OtpResponseDTO;
@@ -30,6 +31,7 @@ public class AuthRegisterService {
     private final AuthLoginService authLoginService;
     private final ModeleMessageClientService modeleMessageClientService;
     private final OtpService otpService; // ✅ Injection du service OTP
+    private final HttpServletRequest request; // Pour accéder à la session
 
     public AuthRegisterService(
             RestTemplate restTemplate,
@@ -37,7 +39,8 @@ public class AuthRegisterService {
             ObjectMapper objectMapper,
             AuthLoginService authLoginService,
             ModeleMessageClientService modeleMessageClientService,
-            OtpService otpService) { // ✅ Ajout dans le constructeur
+            OtpService otpService,
+            HttpServletRequest request) { // ✅ Ajout dans le constructeur
 
         this.restTemplate = restTemplate;
         this.numeroService = numeroService;
@@ -45,6 +48,7 @@ public class AuthRegisterService {
         this.authLoginService = authLoginService;
         this.modeleMessageClientService = modeleMessageClientService;
         this.otpService = otpService; // ✅ Initialisation
+        this.request = request; // ✅ Initialisation
     }
 
     /**
@@ -126,6 +130,10 @@ public class AuthRegisterService {
         String token = loginResponse.getToken();
         log.info("✅ Token JWT récupéré");
 
+        // Stocker le token en session pour la vérification OTP ultérieure
+        request.getSession().setAttribute("JWT_TOKEN", token);
+        log.info("✅ Token JWT stocké en session");
+
         // 3️⃣ Récupération du modèle APRÈS login
         ModeleMessageDTO modeleMessage =
                 modeleMessageClientService.findByMethode(
@@ -190,7 +198,12 @@ public class AuthRegisterService {
 
         // 6️⃣ Stocker l'idMessageEnvoye pour la vérification OTP
         if (otpResponse != null && otpResponse.getIdMessageEnvoye() != null) {
-            response.setIdMessageEnvoye(otpResponse.getIdMessageEnvoye());
+            Long idMessageEnvoye = otpResponse.getIdMessageEnvoye();
+            response.setIdMessageEnvoye(idMessageEnvoye);
+            
+            // Stocker aussi en session pour récupération directe dans OtpController
+            request.getSession().setAttribute("ID_MESSAGE_ENVOYE", idMessageEnvoye);
+            log.info("✅ ID Message envoyé stocké en session: {}", idMessageEnvoye);
         }
 
         return response;

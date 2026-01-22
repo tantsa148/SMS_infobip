@@ -5,21 +5,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
 </head>
 <body>
-    <div class="container">
+    <div class="form-page">
         <h1>Tester getFirstNumeroByUserId</h1>
 
         <form th:action="@{/test-numero}" method="get">
-            <label>User ID :</label>
-            <input type="number" name="userId" required>
+            <div>
+                <label for="userId">User ID :</label>
+                <input type="number" id="userId" name="userId" required/>
+            </div>
             <button type="submit">Tester</button>
         </form>
 
         <div th:if="${message}" class="result">
             <p th:text="${message}"></p>
             <p th:if="${idNumero}" th:text="'IdNumero : ' + ${idNumero}"></p>
+        </div>
+
+        <div class="back-link">
+            <a th:href="@{/dashboard}">← Retour au dashboard</a>
         </div>
     </div>
 </body>

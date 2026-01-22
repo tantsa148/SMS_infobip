@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
 import sms.client.dto.otp.OtpResponseDTO;
+import sms.client.dto.otp.OtpSendRequestDTO;
 import sms.client.dto.otp.OtpVerifyRequestDTO;
 import sms.client.service.OtpService;
 
@@ -38,6 +39,15 @@ public class OtpController {
     }
 
     /**
+     * Affiche le formulaire pour renvoyer un code OTP
+     */
+    @GetMapping("/send")
+    public String afficherFormulaireEnvoiOtp(Model model) {
+        model.addAttribute("otpSendRequest", new OtpSendRequestDTO());
+        return "otp-send"; // À créer si pas existant
+    }
+
+    /**
      * Traite la vérification du code OTP
      */
     @PostMapping("/verify")
@@ -47,29 +57,40 @@ public class OtpController {
             RedirectAttributes redirectAttributes) {
         
         // Récupérer le JWT depuis la session
-        String jwtToken = (String) session.getAttribute("jwtToken");
+        String jwtToken = (String) session.getAttribute("JWT_TOKEN");
+        System.out.println("JWT Token présent: " + (jwtToken != null));
         
         if (jwtToken == null) {
             redirectAttributes.addFlashAttribute("error", "Session expirée. Veuillez vous reconnecter.");
             return "redirect:/login";
         }
 
-        // Vérifier que l'ID du message est présent
-        if (request.getIdMessageEnvoye() == null) {
-            redirectAttributes.addFlashAttribute("error", "ID de message manquant. Veuillez renvoyer un code.");
-            return "redirect:/otp/send";
-        }
+        // Récupérer l'idMessageEnvoye depuis la session (pas du formulaire)
+        Long idMessageEnvoye = (Long) session.getAttribute("ID_MESSAGE_ENVOYE");
+        System.out.println("ID Message Envoyé (depuis session): " + idMessageEnvoye);
+        
+        // Utiliser l'ID de la session pour la vérification
+        request.setIdMessageEnvoye(idMessageEnvoye);
+
+        // Logger les données envoyées
+        System.out.println("=== DONNÉES ENVOYÉES POUR VÉRIFICATION OTP ===");
+        System.out.println("idMessageEnvoye: " + request.getIdMessageEnvoye());
+        System.out.println("code: " + request.getCode());
 
         // Appeler le service de vérification
         OtpResponseDTO response = otpService.verifierOtp(request, jwtToken);
+
+        // Logger la réponse
+        System.out.println("=== RÉPONSE VÉRIFICATION OTP ===");
+        System.out.println("Success: " + response.isSuccess());
+        System.out.println("Message: " + response.getMessage());
 
         if (response.isSuccess()) {
             redirectAttributes.addFlashAttribute("success", "Code OTP vérifié avec succès !");
             return "redirect:/dashboard";
         } else {
             redirectAttributes.addFlashAttribute("error", response.getMessage());
-            redirectAttributes.addFlashAttribute("idMessageEnvoye", request.getIdMessageEnvoye());
-            return "redirect:/otp/verify?idMessageEnvoye=" + request.getIdMessageEnvoye();
+            return "redirect:/otp/verify";
         }
     }
 }

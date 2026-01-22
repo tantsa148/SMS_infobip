@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envoyer un nouveau code OTP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
+</head>
+<body>
+    <div class="form-page">
+        <h1>Envoyer un nouveau code OTP</h1>
+        <p class="subtitle">Demandez un nouveau code de vérification</p>
+
+        <form th:action="@{/otp/send}" method="post" style="padding: 0 40px;">
+            <p>Pour recevoir un nouveau code OTP, veuillez vous reconnecter.</p>
+            
+            <a th:href="@{/login}" class="btn">Retour à la connexion</a>
+        </form>
+
+        <div class="back-link">
+            <a th:href="@{/otp/verify}">← Retour à la vérification</a>
+        </div>
+    </div>
+</body>
+</html>
+

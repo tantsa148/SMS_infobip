@@ -6,12 +6,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" th:href="@{/css/global.css}">
-    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <link rel="stylesheet" th:href="@{/css/forms.css}">
 </head>
 <body>
 
-<div class="login-page">
+<div class="form-page">
 
     <h1>Créer un compte</h1>
 
@@ -75,10 +74,9 @@
     </form>
 
     <!-- Lien login -->
-    <p style="text-align:center; margin-top:15px;">
-        Déjà un compte ?
-        <a th:href="@{/login}">Se connecter</a>
-    </p>
+    <div class="back-link">
+        <p>Déjà un compte ? <a th:href="@{/login}">Se connecter</a></p>
+    </div>
 
 </div>
 
