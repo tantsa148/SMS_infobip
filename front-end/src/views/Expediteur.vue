@@ -70,6 +70,7 @@
       :show="showAddModal"
       @update:show="showAddModal = $event"
       @success="handleNumeroSuccess"
+      @error="handleNumeroError"
     />
   </div>
 </template>
@@ -116,6 +117,14 @@ const handleNumeroSuccess = async () => {
   }
 }
 
+// Fonction appelée en cas d'erreur lors de l'ajout du numéro
+// Le modal se ferme automatiquement, on affiche juste la notification
+const handleNumeroError = (errorMessage: string) => {
+  apiMessage.value = errorMessage
+  if (timeoutId) clearTimeout(timeoutId)
+  timeoutId = setTimeout(() => { apiMessage.value = '' }, 5000)
+}
+
 function formatDate(date: string) {
   return new Date(date).toLocaleString()
 }
@@ -125,3 +134,27 @@ onUnmounted(() => { if (timeoutId) clearTimeout(timeoutId) })
 
 onMounted(fetchData)
 </script>
+
+<style scoped>
+.fixed-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+</style>
+

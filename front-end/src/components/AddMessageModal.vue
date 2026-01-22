@@ -39,18 +39,6 @@
           </select>
         </div>
 
-        <!-- MESSAGE INFO -->
-        <div
-          v-if="message"
-          :class="[
-            'alert',
-            messageType === 'error' ? 'alert-danger' : 'alert-success',
-            'mt-3'
-          ]"
-        >
-          {{ message }}
-        </div>
-
         <!-- ACTIONS -->
         <div class="modal-actions d-flex justify-content-end gap-2 mt-3">
           <button
@@ -87,26 +75,18 @@
 
       <div class="modal-body">
         <div class="confirmation-content">
-          <div class="text-center mb-3">
-            <i class="bi bi-chat-dots text-primary" style="font-size: 3rem;"></i>
-          </div>
-
-          <p class="text-center mb-2">
-            Voulez-vous ajouter le message suivant :
-          </p>
-
-          <div class="alert alert-light text-center">
-            <strong>{{ messageText }}</strong>
-          </div>
-
-          <div class="alert alert-light text-center" v-if="selectedEvenement">
-            <small>Événement sélectionné : 
-              <strong>
-                {{
-                  evenements.find(ev => ev.id === selectedEvenement)?.code
-                }}
-              </strong>
-            </small>
+          <div class="confirmation-details">
+            <h6 class="mb-3">Détails :</h6>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-medium">Message :</span>
+                <span class="text-primary">{{ messageText }}</span>
+              </li>
+              <li v-if="selectedEvenement" class="list-group-item d-flex justify-content-between">
+                <span class="fw-medium">Événement :</span>
+                <span>{{ evenements.find(ev => ev.id === selectedEvenement)?.code }}</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -117,7 +97,7 @@
           @click="cancelConfirmation"
           :disabled="confirming"
         >
-          Non
+          Annuler
         </button>
 
         <button
@@ -127,14 +107,16 @@
         >
           <span
             v-if="confirming"
-            class="spinner-border spinner-border-sm me-2"
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
           ></span>
-          Oui, ajouter
+          {{ confirming ? 'Ajout en cours...' : 'Confirmer l\'ajout' }}
         </button>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
@@ -147,6 +129,8 @@ interface Props { show: boolean }
 interface Emits {
   (e: 'close'): void
   (e: 'submit', payload: { texte: string; evenementId: number }): void
+  (e: 'success', message: string): void
+  (e: 'error', message: string): void
 }
 
 const props = defineProps<Props>()
@@ -160,9 +144,6 @@ const evenements = ref<Evenement[]>([])
 const submitting = ref(false)
 const confirming = ref(false)
 const showConfirmationModal = ref(false)
-
-const message = ref('')
-const messageType = ref<'success' | 'error'>('success')
 
 const maxLength = 500
 
@@ -200,14 +181,21 @@ const confirmSubmit = async () => {
       texte: messageText.value.trim(),
       evenementId: selectedEvenement.value
     })
-    message.value = 'Message ajouté avec succès !'
-    messageType.value = 'success'
+    
+    // Émettre l'événement de succès au parent
+    emit('success', 'Message ajouté avec succès !')
+    
+    // Fermer le modal
     showConfirmationModal.value = false
-    closeModal()
+    emit('close')
+    
   } catch (err) {
     console.error('Erreur création message', err)
-    message.value = 'Impossible d’ajouter le message'
-    messageType.value = 'error'
+    const errorMsg = 'Impossible d\'ajouter le message'
+    // Émettre l'événement d'erreur au parent
+    emit('error', errorMsg)
+    showConfirmationModal.value = false
+    emit('close')
   } finally {
     confirming.value = false
   }
@@ -220,7 +208,6 @@ const resetForm = () => {
   submitting.value = false
   confirming.value = false
   showConfirmationModal.value = false
-  message.value = ''
 }
 
 /* API EVENTS */
@@ -239,3 +226,4 @@ watch(() => props.show, (val) => {
   if (!val) resetForm()
 })
 </script>
+

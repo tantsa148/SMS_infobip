@@ -44,7 +44,7 @@ const insertnumber = computed(() => route.path === '/insertnumero')
 /* Contenu principal pour les pages normales */
 .main-content {
   margin-left: 250px; /* correspond à la largeur de la sidebar */
-  padding-top: 80px;  /* hauteur du header + marge */
+  padding-top: 60px;  /* hauteur du header + marge */
   padding-left: 20px;
   padding-right: 20px;
   flex: 1;

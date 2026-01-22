@@ -6,10 +6,21 @@
       <p class="mt-2 text-muted">Chargement des événements...</p>
     </div>
 
+    <!-- NOTIFICATION -->
+    <div v-if="apiMessage" class="fixed-notification">
+      <div class="notification-content">
+        <div class="notification-header">
+          <span class="notification-title">Notification</span>
+          <button class="notification-close" @click="apiMessage = ''">&times;</button>
+        </div>
+        <div class="notification-body">{{ apiMessage }}</div>
+      </div>
+    </div>
+
     <!-- CARD -->
     <div v-else class="card shadow">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <div class="card-title mb-0">Événements</div>
+        <div class="card-title mb-0">Listes des Événements</div>
 
         <button
           class="btn btn-primary btn-sm"
@@ -88,7 +99,7 @@
       <!-- FOOTER -->
       <div v-if="evenementsFiltres.length > 0" class="card-footer">
         <small class="text-muted">
-          Affichage : {{ evenementsFiltres.length }} / {{ evenements.length }} événement(s)
+          {{ evenementsFiltres.length }} / {{ evenements.length }} événement(s)
         </small>
       </div>
     </div>
@@ -112,11 +123,14 @@ const loading = ref(true)
 const evenements = ref<Evenement[]>([])
 const evenementsFiltres = ref<Evenement[]>([])
 const showAddModal = ref(false)
+const apiMessage = ref('')
 
 const filtres = ref({
   code: '',
   description: ''
 })
+
+let timeoutId: number | null = null
 
 const appliquerFiltres = () => {
   evenementsFiltres.value = evenements.value.filter(evt => {
@@ -154,10 +168,15 @@ const handleAddEvenement = async (payload: { code: string; description: string }
   try {
     await evenementService.create(payload)
     showAddModal.value = false
+    apiMessage.value = 'Événement ajouté avec succès'
     await fetchEvenements()
   } catch (err) {
     console.error(err)
+    apiMessage.value = 'Erreur lors de l\'ajout de l\'événement'
   }
+
+  if (timeoutId) clearTimeout(timeoutId)
+  timeoutId = setTimeout(() => (apiMessage.value = ''), 3000)
 }
 
 onMounted(fetchEvenements)
@@ -166,5 +185,28 @@ onMounted(fetchEvenements)
 <style scoped>
 .card-body.border-bottom {
   border-bottom: 1px solid #dee2e6;
+}
+
+.fixed-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>

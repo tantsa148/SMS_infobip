@@ -1,16 +1,19 @@
 <template>
   <div class="sidebar-custom">
     <!-- En-tête -->
-    <div class="d-flex justify-center items-center mb-4" style="height: 80px;">
-      <h1>SMS</h1>
+    <div class="sidebar-header">
+      <h1>MessageHub</h1>
     </div>
 
+    <!-- Divider après l'entête -->
+    <div class="sidebar-divider"></div>
+
     <!-- Section Statistique -->
-    <ul class="nav flex-column mb-4">
+    <ul class="nav flex-column">
       <li class="nav-item">
         <RouterLink
           to="/acceuil"
-          class="nav-link"
+          class="nav-link dashboard-link"
           :class="{ active: route.path === '/acceuil' }"
         >
           <i class="fas fa-home"></i>
@@ -55,7 +58,7 @@
           class="nav-link"
           :class="{ active: route.path === '/modeleMessage' }"
         >
-          <i class="fas fa-user-friends"></i>
+          <i class="fas far fa-envelope"></i>
         Modele Message 
         </RouterLink>
       </li>
@@ -67,7 +70,7 @@
           class="nav-link"
           :class="{ active: route.path === '/messageTexte' }"
         >
-          <i class="fas fa-user-friends"></i>
+          <i class="fas far fa-file-alt"></i>
         Message enregistre 
         </RouterLink>
       </li>
@@ -79,7 +82,7 @@
           class="nav-link"
           :class="{ active: route.path === '/evenement' }"
         >
-          <i class="fas fa-user-friends"></i>
+          <i class="fas far fa-list-alt"></i>
         Evenement 
         </RouterLink>
       </li>

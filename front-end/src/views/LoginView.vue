@@ -1,20 +1,31 @@
 <template>
-  <div class="login-page">
-    <h1>Connexion</h1>
-    <form @submit.prevent="handleLogin">
-      <div>
-        <label>Nom d'utilisateur</label>
-        <input type="text" v-model="username" required />
-      </div>
-      <div>
-        <label>Mot de passe</label>
-        <input type="password" v-model="password" required />
-      </div>
-      <button type="submit" :disabled="loading">
-        {{ loading ? 'Connexion...' : 'Se connecter' }}
-      </button>
-    </form>
-    <p v-if="error" class="error">{{ error }}</p>
+  <div class="login-container">
+    <div class="login-page">
+      <h1>Login</h1>
+      <p class="subtitle">Se connecter </p>
+      
+      <form @submit.prevent="handleLogin">
+        <div>
+          <label>Nom d'utilisateur</label>
+          <input type="text" v-model="username" placeholder="Username" required />
+        </div>
+        
+        <div>
+          <label>Mot de passe</label>
+          <input type="password" v-model="password" placeholder="Password" required />
+        </div>
+        
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Connexion...' : 'Login' }}
+        </button>
+      </form>
+      
+      <p v-if="error" class="error">{{ error }}</p>
+      
+      <p class="signup-link">
+        <a href="#">S'inscrire ici</a>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -38,10 +49,9 @@ const handleLogin = async (): Promise<void> => {
 
   try {
     await authStore.login({ username: username.value, password: password.value })
-    router.push('/acceuil') // redirection après connexion réussie
+    router.push('/acceuil')
   } catch (err: any) {
     if (err.response && err.response.data) {
-      // Le backend renvoie une chaîne simple ou un objet message
       error.value = typeof err.response.data === 'string'
         ? err.response.data
         : err.response.data.message || 'Erreur lors de la connexion'
@@ -55,5 +65,4 @@ const handleLogin = async (): Promise<void> => {
 </script>
 
 <style scoped>
-/* Tu peux également laisser l'import du CSS externe si tu préfères */
 </style>

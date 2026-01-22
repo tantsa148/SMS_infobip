@@ -11,7 +11,7 @@
     <!-- CARD -->
     <div v-else class="card shadow">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <div class="card-title mb-0">Messages enregistrés</div>
+        <div class="card-title mb-0">Listes Messages enregistrés</div>
 
         <button
           class="btn btn-primary btn-sm"
@@ -101,7 +101,7 @@
       <!-- FOOTER -->
       <div v-if="messagesFiltres.length > 0" class="card-footer">
         <small class="text-muted">
-          Affichage : {{ messagesFiltres.length }} / {{ messages.length }} message(s)
+         {{ messagesFiltres.length }} / {{ messages.length }} message(s)
         </small>
       </div>
     </div>
@@ -109,7 +109,8 @@
 <AddMessageModal
   :show="showAddModal"
   @close="showAddModal = false"
-  @submit="handleAddMessage"
+  @success="handleAddSuccess"
+  @error="handleAddError"
 />
 
 <!-- Modal de confirmation de suppression -->
@@ -131,9 +132,29 @@
 </div>
 
 <!-- Notification toast -->
-<div v-if="deleteError" class="notification-toast alert alert-danger alert-dismissible fade show" role="alert">
-  {{ deleteError }}
-  <button type="button" class="btn-close" @click="deleteError = ''"></button>
+<div v-if="notificationMessage" class="fixed-notification">
+  <div class="notification-content">
+    <div class="notification-header">
+      <span class="notification-title"></span>
+      <button class="notification-close" @click="notificationMessage = ''">&times;</button>
+    </div>
+    <div class="notification-body" :class="notificationType === 'error' ? 'text-danger' : 'text-success'">
+      {{ notificationMessage }}
+    </div>
+  </div>
+</div>
+
+<!-- Notification pour erreur de suppression -->
+<div v-if="deleteError" class="fixed-notification">
+  <div class="notification-content">
+    <div class="notification-header">
+      <span class="notification-title"></span>
+      <button class="notification-close" @click="deleteError = ''">&times;</button>
+    </div>
+    <div class="notification-body text-danger">
+      {{ deleteError }}
+    </div>
+  </div>
 </div>
 
 </template>
@@ -199,15 +220,31 @@ const fetchMessages = async () => {
 const showAddModal = ref(false)
 const showDeleteModal = ref(false)
 const messageToDelete = ref<MessageTexte | null>(null)
+const notificationMessage = ref('')
+const notificationType = ref<'success' | 'error'>('success')
+const deleteError = ref('')
 
-const handleAddMessage = async (payload: { texte: string; evenementId: number }) => {
-  try {
-    await messageService.create(payload)
-    showAddModal.value = false
-    await fetchMessages()
-  } catch (err) {
-    console.error(err)
-  }
+let notificationTimeout: number | null = null
+
+const handleAddSuccess = async (message: string) => {
+  notificationMessage.value = message
+  notificationType.value = 'success'
+  await fetchMessages()
+  
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => {
+    notificationMessage.value = ''
+  }, 3000)
+}
+
+const handleAddError = (message: string) => {
+  notificationMessage.value = message
+  notificationType.value = 'error'
+  
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => {
+    notificationMessage.value = ''
+  }, 3000)
 }
 
 const openDeleteModal = (msg: MessageTexte) => {
@@ -232,9 +269,6 @@ const confirmDelete = async () => {
     }
   }
 }
-
-const deleteError = ref('')
-
 
 onMounted(fetchMessages)
 </script>
@@ -287,12 +321,24 @@ onMounted(fetchMessages)
   cursor: pointer;
 }
 
-.notification-toast {
+.fixed-notification {
   position: fixed;
-  top: 20px;
+  top: 80px;
   right: 20px;
-  z-index: 9999;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>

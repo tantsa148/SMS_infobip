@@ -9,10 +9,6 @@
 
       <!-- Body -->
       <div class="modal-body">
-        <!-- Alert pour erreurs générales -->
-        <div v-if="errors.generalError" class="alert alert-danger">
-          {{ errors.generalError }}
-        </div>
 
         <form @submit.prevent="showConfirmation">
           <!-- Numéro -->
@@ -27,9 +23,6 @@
               required 
               placeholder="Ex: 23242528"
             />
-            <div v-if="errors.numero" class="invalid-feedback">
-              {{ errors.numero }}
-            </div>
           </div>
 
           <!-- Checkbox pour nouveau Infobip -->
@@ -100,13 +93,12 @@
 
           <!-- Select Plateforme -->
           <div class="mb-3">
-            <label for="plateformeSelect" class="form-label">Plateforme (optionnel)</label>
+            <label for="plateformeSelect" class="form-label">Plateforme</label>
             <select 
               id="plateformeSelect"
               v-model="idPlateforme"
               class="form-select"
             >
-              <option :value="null">-- Aucune plateforme --</option>
               <option v-for="plateforme in plateformes" :key="plateforme.id" :value="plateforme.id">
                 {{ plateforme.nomPlateforme }}
               </option>
@@ -142,6 +134,7 @@
     :selected-infobip-id="selectedInfobipId"
     :new-infobip="newInfobip"
     :id-plateforme="idPlateforme"
+    :nom-plateforme="nomPlateforme"
     :is-submitting="isSubmitting"
     @update:show="closeConfirmationModal"
     @confirm="submitForm"
@@ -170,7 +163,7 @@ export default defineComponent({
   name: 'AddNumeroModal',
   components: { ConfirmationModal },
   props: { show: { type: Boolean, required: true } },
-  emits: ['update:show', 'success'],
+  emits: ['update:show', 'success', 'error'],
   setup(props, { emit }) {
     const numero = ref('')
     const isNewInfobip = ref(false)
@@ -186,6 +179,12 @@ export default defineComponent({
     const selectedInfobip = computed(() => {
       if (!selectedInfobipId.value) return null
       return infobips.value.find(infobip => infobip.idInfobip === selectedInfobipId.value)
+    })
+
+    const nomPlateforme = computed(() => {
+      if (!idPlateforme.value) return undefined
+      const plateforme = plateformes.value.find(p => p.id === idPlateforme.value)
+      return plateforme?.nomPlateforme
     })
 
     onMounted(async () => {
@@ -263,7 +262,16 @@ export default defineComponent({
 
       } catch (err: any) {
         console.error('Erreur lors de l\'ajout:', err)
-        errors.value.generalError = err.response?.data?.error || err.message || 'Erreur lors de l\'ajout du numéro'
+        const errorMsg = err.response?.data?.error || err.message || 'Erreur lors de l\'ajout du numéro'
+        errors.value.generalError = errorMsg
+        // Fermer les modals en cas d'erreur et émettre l'erreur
+        closeConfirmationModal()
+        emit('error', errorMsg)
+        // Fermer aussi le modal principal après un délai
+        setTimeout(() => {
+          closeModal()
+          resetForm()
+        }, 500)
       } finally {
         isSubmitting.value = false
       }
@@ -278,6 +286,7 @@ export default defineComponent({
       infobips,
       plateformes,
       idPlateforme,
+      nomPlateforme,
       errors,
       isSubmitting,
       showConfirmationModal,

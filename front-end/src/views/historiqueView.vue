@@ -131,7 +131,7 @@
 
       <div v-if="historiqueFiltre.length > 0" class="card-footer">
         <small class="text-muted">
-          Affichage : {{ historiqueFiltre.length }} / {{ historique.length }} SMS
+          {{ historiqueFiltre.length }} / {{ historique.length }} SMS
         </small>
       </div>
     </div>

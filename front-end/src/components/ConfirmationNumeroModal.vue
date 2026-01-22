@@ -3,16 +3,11 @@
     <div class="modal-content confirmation-modal">
       <div class="modal-header">
         <h5 class="modal-title">Confirmer l'ajout</h5>
-        <button type="button" class="btn-close" @click="closeModal" aria-label="Fermer"></button>
       </div>
 
       <div class="modal-body">
         <div class="confirmation-content">
-          <div class="mb-4 text-center">
-            <i class="bi bi-question-circle text-primary confirmation-icon"></i>
-            <p class="confirmation-text">Voulez-vous vraiment ajouter ce numéro expéditeur ?</p>
-          </div>
-
+         
           <div class="confirmation-details">
             <h6 class="mb-3">Détails :</h6>
             <ul class="list-group list-group-flush">
@@ -28,9 +23,9 @@
                 <span class="fw-medium">Nouvel Infobip :</span>
                 <span>API Key: {{ newInfobip.apiKey.substring(0, 8) }}...</span>
               </li>
-              <li v-if="idPlateforme" class="list-group-item d-flex justify-content-between">
-                <span class="fw-medium">ID Plateforme :</span>
-                <span>{{ idPlateforme }}</span>
+              <li v-if="nomPlateforme" class="list-group-item d-flex justify-content-between">
+                <span class="fw-medium">Plateforme :</span>
+                <span>{{ nomPlateforme }}</span>
               </li>
             </ul>
           </div>
@@ -98,6 +93,10 @@ export default defineComponent({
     },
     idPlateforme: {
       type: Number as () => number | undefined,
+      default: undefined
+    },
+    nomPlateforme: {
+      type: String as () => string | undefined,
       default: undefined
     },
     isSubmitting: {

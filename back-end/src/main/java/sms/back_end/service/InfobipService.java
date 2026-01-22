@@ -47,7 +47,17 @@ public class InfobipService {
                 throw new IllegalArgumentException("BaseUrl ou ApiKey manquante pour ce numéro");
             }
 
-            log.info("📡 Appel Infobip : URL={} | API Key=****", baseUrl + "/account/1/balance");
+            // Ajouter https:// si absent
+            if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+                baseUrl = "https://" + baseUrl;
+                log.info("🔗 Ajout de https:// au baseUrl: {}", baseUrl);
+            }
+
+            // DEBUG: Afficher la clé API complète
+            log.info("📡 Appel Infobip : URL={}", baseUrl + "/account/1/balance");
+            log.info("🔑 API Key enviada a Infobip: App {}", apiKey);
+            log.info("🔑 BaseUrl usada: {}", baseUrl);
+            log.info("🔑 idNumero solicitado: {}", idNumero);
 
             WebClient client = webClientBuilder.baseUrl(baseUrl).build();
 
