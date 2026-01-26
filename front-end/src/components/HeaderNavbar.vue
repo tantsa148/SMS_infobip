@@ -59,16 +59,7 @@
               <a href="/expediteur" class="menu-item">
                 <i class="fa fa-user"></i> Mes numéros
               </a>
-              <a href="#" class="menu-item">
-                <i class="fa fa-cog"></i> Paramètres
-              </a>
-              <a href="#" class="menu-item">
-                <i class="fa fa-question-circle"></i> Aide
-              </a>
-              <div class="menu-divider"></div>
-              <a href="#" class="menu-item logout" @click="logout">
-                <i class="fa fa-sign-out"></i> Déconnexion
-              </a>
+              
             </div>
           </div>
         </div>

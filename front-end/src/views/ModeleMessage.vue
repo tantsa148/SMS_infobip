@@ -113,7 +113,7 @@
 
       <div v-if="modelesFiltres.length > 0" class="card-footer">
         <small class="text-muted">
-          Affichage : {{ modelesFiltres.length }} / {{ modeles.length }} modèle(s)
+           {{ modelesFiltres.length }} / {{ modeles.length }} modele
         </small>
       </div>
     </div>

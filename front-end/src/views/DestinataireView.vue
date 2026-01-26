@@ -125,7 +125,7 @@
 
       <div v-if="numerosFiltre.length > 0" class="card-footer">
         <small class="text-muted">
-          Affichage : {{ numerosFiltre.length }} / {{ numeros.length }} numéro(s)
+           {{ numerosFiltre.length }} / {{ numeros.length }} numéro
         </small>
       </div>
     </div>

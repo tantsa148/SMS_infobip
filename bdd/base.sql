@@ -247,3 +247,28 @@ CREATE TABLE evenement_transaction (
         ON DELETE RESTRICT
 );
 
+------------------------------------------------------
+----MODELE MESSAGE
+------------------------------------------------------
+CREATE TABLE modele_message (
+    id SERIAL PRIMARY KEY,
+    methode VARCHAR(50) NOT NULL,
+    id_expediteur INTEGER NOT NULL,
+    id_message INTEGER NOT NULL,
+    CONSTRAINT fk_expediteur 
+        FOREIGN KEY (id_expediteur) 
+        REFERENCES numero_expediteur(id_numero)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_message 
+        FOREIGN KEY (id_message) 
+        REFERENCES messages(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Index pour améliorer les performances
+CREATE INDEX idx_modele_message_expediteur ON modele_message(id_expediteur);
+CREATE INDEX idx_modele_message_message ON modele_message(id_message);
+CREATE INDEX idx_modele_message_methode ON modele_message(methode);
+
