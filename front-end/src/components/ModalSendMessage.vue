@@ -5,8 +5,6 @@
       <div class="modal-header">
         <h5 class="modal-title">Envoyer un message</h5>
       </div>
-      <!-- TOAST NOTIFICATION -->
-
 
       <div class="modal-body">
 
@@ -31,8 +29,34 @@
           </select>
         </div>
 
-        <!-- SELECT MESSAGE -->
+        <!-- CHECKBOX: UTILISER UN MESSAGE PERSONNALISÉ -->
         <div class="mb-3">
+          <div class="form-check">
+            <input 
+              type="checkbox" 
+              v-model="useCustomMessage" 
+              id="customMessageCheck" 
+              class="form-check-input"
+            >
+            <label class="form-check-label" for="customMessageCheck">
+              Utiliser un message personnalisé
+            </label>
+          </div>
+        </div>
+
+        <!-- CHAMP DE TEXTE: MESSAGE PERSONNALISÉ (si coché) -->
+        <div v-if="useCustomMessage" class="mb-3">
+          <label class="form-label">Message personnalisé</label>
+          <textarea
+            v-model="customMessageText"
+            class="form-control"
+            rows="4"
+            placeholder="Entrez votre message..."
+          ></textarea>
+        </div>
+
+        <!-- SELECT MESSAGE (si non coché) -->
+        <div v-else class="mb-3">
           <label class="form-label">Message</label>
           <select v-model="selectedMessage" class="form-select" required>
             <option disabled value="">-- Choisir un message --</option>
@@ -63,6 +87,19 @@
     @close="showConfirmModal = false"
     @confirm="finalSend"
   />
+
+  <!-- Notification toast -->
+  <div v-if="notificationMessage" class="fixed-notification">
+    <div class="notification-content">
+      <div class="notification-header">
+        <span class="notification-title"></span>
+        <button class="notification-close" @click="notificationMessage = ''">&times;</button>
+      </div>
+      <div class="notification-body" :class="notificationType === 'error' ? 'text-danger' : 'text-success'">
+        {{ notificationMessage }}
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -94,8 +131,26 @@ const selectedNumero = ref<UsersDetail | null>(null)
 
 const messages = ref<MessageTexte[]>([])
 const selectedMessage = ref<MessageTexte | null>(null)
+const useCustomMessage = ref(false)
+const customMessageText = ref("")
 
 const showConfirmModal = ref(false)
+
+// Notification variables
+const notificationMessage = ref('')
+const notificationType = ref<'success' | 'error'>('success')
+let notificationTimeout: number | null = null
+
+// Fonction pour afficher une notification
+const showNotification = (message: string, type: 'success' | 'error') => {
+  notificationMessage.value = message
+  notificationType.value = type
+  
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => {
+    notificationMessage.value = ''
+  }, 3000)
+}
 
 const confirmationData = ref({
   idDestinataire: 0,
@@ -127,12 +182,27 @@ const closeModal = () => {
   emit('close')
   selectedNumero.value = null
   selectedMessage.value = null
+  useCustomMessage.value = false
+  customMessageText.value = ""
 }
 
 const showConfirm = () => {
-  if (!selectedNumero.value || !selectedMessage.value) {
-    alert('Veuillez sélectionner un numéro et un message.')
+  if (!selectedNumero.value) {
+    showNotification('Veuillez sélectionner un numéro expéditeur.', 'error')
     return
+  }
+
+  // Vérifier si message personnalisé ou prédéfini
+  if (useCustomMessage.value) {
+    if (!customMessageText.value.trim()) {
+      showNotification('Veuillez entrer un message personnalisé.', 'error')
+      return
+    }
+  } else {
+    if (!selectedMessage.value) {
+      showNotification('Veuillez sélectionner un message.', 'error')
+      return
+    }
   }
 
   confirmationData.value = {
@@ -145,8 +215,8 @@ const showConfirm = () => {
   idExpediteur: selectedNumero.value.idNumero,
   numeroExpediteur: selectedNumero.value.numeroExpediteur ?? "",
 
-  idMessage: selectedMessage.value.id,
-  texteMessage: selectedMessage.value.texte ?? ""
+  idMessage: useCustomMessage.value ? 0 : selectedMessage.value!.id,
+  texteMessage: useCustomMessage.value ? customMessageText.value : (selectedMessage.value!.texte ?? "")
 }
 
   showConfirmModal.value = true
@@ -154,18 +224,27 @@ const showConfirm = () => {
 
 const finalSend = async () => {
   try {
-    // Envoi du SMS
-    const response = await smsService.sendSms({
-      idNumeroExpediteur: confirmationData.value.idExpediteur,
-      idNumeroDestinataire: confirmationData.value.idDestinataire,
-      idMessage: confirmationData.value.idMessage
-    });
+    let response;
+    
+    if (useCustomMessage.value) {
+      response = await smsService.sendSmsWithMessage({
+        idNumeroExpediteur: confirmationData.value.idExpediteur,
+        idNumeroDestinataire: confirmationData.value.idDestinataire,
+        message: confirmationData.value.texteMessage
+      });
+    } else {
+      response = await smsService.sendSms({
+        idNumeroExpediteur: confirmationData.value.idExpediteur,
+        idNumeroDestinataire: confirmationData.value.idDestinataire,
+        idMessage: confirmationData.value.idMessage
+      });
+    }
 
     // Récupération des données
     const data = response.data;
 
-    // Affichage du status et de la description
-    alert(`Statut: ${data.statut}\nDescription: ${data.description || "Aucune description"}`);
+    // Affichage de la notification de succès
+    showNotification(`Message envoyé avec succès ! Statut: ${data.statut}`, 'success');
 
     // Fermer modals
     showConfirmModal.value = false;
@@ -177,9 +256,9 @@ const finalSend = async () => {
     // Si le serveur renvoie un JSON d'erreur
     if (err.response?.data) {
       const data = err.response.data;
-      alert(`Erreur !\nStatut: ${data.statut || "ERROR"}\nDescription: ${data.description || "Aucune description"}`);
+      showNotification(`Erreur: ${data.description || data.statut || "Erreur lors de l'envoi"}`, 'error');
     } else {
-      alert("Erreur lors de l'envoi du message.");
+      showNotification("Erreur lors de l'envoi du message.", 'error');
     }
   }
 }
@@ -188,3 +267,37 @@ onMounted(() => {
   fetchMessages()
 })
 </script>
+
+<style scoped>
+.fixed-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.text-success {
+  color: #198754;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+</style>
+

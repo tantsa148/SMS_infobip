@@ -55,17 +55,27 @@
     <div class="modal-custom">
       <div class="modal-header">
         <h5 class="modal-title">Confirmer l'envoi</h5>
-        <button class="btn-close" @click="showConfirmModal = false">&times;</button>
       </div>
       <div class="modal-body">
         <p><strong>Méthode :</strong> {{ confirmationData.methode }}</p>
-        <p><strong>idNumero :</strong> {{ confirmationData.idNumero }}</p>
-        <p><strong>idMessage :</strong> {{ confirmationData.idMessage }}</p>
         <p><strong>Message :</strong> {{ confirmationData.message }}</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" @click="showConfirmModal = false">Annuler</button>
         <button class="btn btn-primary" @click="confirmSubmit">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification toast -->
+  <div v-if="notificationMessage" class="fixed-notification">
+    <div class="notification-content">
+      <div class="notification-header">
+        <span class="notification-title"></span>
+        <button class="notification-close" @click="notificationMessage = ''">&times;</button>
+      </div>
+      <div class="notification-body" :class="notificationType === 'error' ? 'text-danger' : 'text-success'">
+        {{ notificationMessage }}
       </div>
     </div>
   </div>
@@ -106,6 +116,22 @@ const confirmationData = reactive({
   idMessage: null as number | null
 })
 
+// Notification variables
+const notificationMessage = ref('')
+const notificationType = ref<'success' | 'error'>('success')
+let notificationTimeout: number | null = null
+
+// Fonction pour afficher une notification
+const showNotification = (message: string, type: 'success' | 'error') => {
+  notificationMessage.value = message
+  notificationType.value = type
+  
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => {
+    notificationMessage.value = ''
+  }, 3000)
+}
+
 // Charger les données
 onMounted(async () => {
   try {
@@ -121,7 +147,7 @@ onMounted(async () => {
 // Ouvrir modal confirmation
 const openConfirmation = () => {
   if (!form.methode || !form.idExpediteur || !form.texteMessage) {
-    alert('Veuillez remplir tous les champs !')
+    showNotification('Veuillez remplir tous les champs !', 'error')
     return
   }
 
@@ -148,12 +174,13 @@ const confirmSubmit = async () => {
   try {
     const res = await ModeleMessageService.create(payload)
     console.log('Modèle ajouté :', res)
-    alert('Modèle ajouté avec succès !')
+    showNotification('Modèle ajouté avec succès !', 'success')
     showConfirmModal.value = false
     emit('submit', { ...form }) // notifie le parent
+    emit('close') // ferme le modal d'ajout
   } catch (err) {
     console.error('Erreur création modèle :', err)
-    alert('Erreur lors de l’ajout du modèle.')
+    showNotification('Erreur lors de l\'ajout du modèle.', 'error')
   }
 }
 </script>
@@ -200,5 +227,36 @@ const confirmSubmit = async () => {
   border: none;
   font-size: 20px;
   cursor: pointer;
+}
+
+.fixed-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 999;
+}
+
+.notification-content {
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.text-success {
+  color: #198754;
+}
+
+.text-danger {
+  color: #dc3545;
 }
 </style>

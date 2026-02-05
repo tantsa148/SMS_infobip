@@ -13,7 +13,7 @@
         <form @submit.prevent="showConfirmation">
           <!-- Numéro -->
           <div class="mb-3">
-            <label for="numeroInput" class="form-label">Numéro <span class="text-danger">*</span></label>
+            <label for="numeroInput" class="form-label">Numéro </label>
             <input 
               type="text" 
               id="numeroInput"
@@ -34,13 +34,13 @@
               id="newInfobipCheck"
             >
             <label class="form-check-label" for="newInfobipCheck">
-              Créer un nouvel Infobip
+              Créer de nouvel info Infobip
             </label>
           </div>
 
           <!-- Sélection ou création Infobip -->
           <div v-if="!isNewInfobip" class="mb-3">
-            <label for="infobipSelect" class="form-label">Infobip existant <span class="text-danger">*</span></label>
+            <label for="infobipSelect" class="form-label">Infobip existant </label>
             <select 
               id="infobipSelect"
               v-model="selectedInfobipId" 

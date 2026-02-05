@@ -34,9 +34,11 @@ public class SmsController {
                     .body(createErrorResponse("ID numéro destinataire requis"));
         }
 
-        if (smsRequest.getIdMessage() == null) {
+        // Soit idMessage est fourni, soit message est fourni (pour création automatique)
+        if (smsRequest.getIdMessage() == null && 
+            (smsRequest.getMessage() == null || smsRequest.getMessage().isEmpty())) {
             return ResponseEntity.badRequest()
-                    .body(createErrorResponse("ID message requis"));
+                    .body(createErrorResponse("ID message ou message requis"));
         }
 
         // ✅ Appel du service

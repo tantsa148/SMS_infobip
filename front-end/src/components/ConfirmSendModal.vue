@@ -12,17 +12,14 @@
           <h6 class="mb-2">Informations de l’envoi</h6>
 
           <p>
-            <strong>ID Destinataire :</strong> {{ data.idDestinataire }} <br>
             <strong>Numéro Destinataire :</strong> {{ data.numeroDestinataire }}
           </p>
 
           <p>
-            <strong>ID Expéditeur :</strong> {{ data.idExpediteur }} <br>
             <strong>Numéro Expéditeur :</strong> {{ data.numeroExpediteur }}
           </p>
 
           <p>
-            <strong>ID Message :</strong> {{ data.idMessage }} <br>
             <strong>Texte :</strong> {{ data.texteMessage }}
           </p>
 

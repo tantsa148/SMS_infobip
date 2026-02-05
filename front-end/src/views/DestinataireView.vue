@@ -85,7 +85,6 @@
       <div class="card-body">
         <!-- AUCUN NUMERO -->
         <div v-if="numerosFiltre.length === 0" class="text-center py-4">
-          <div class="text-muted mb-3">📱</div>
           <p class="text-muted mb-2">Aucun numéro trouvé</p>
         </div>
 

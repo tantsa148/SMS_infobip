@@ -61,8 +61,21 @@ public class InfobipSmsService {
             NumeroDestinataire destinataire = numeroDestinataireRepo.findById(dto.getIdNumeroDestinataire())
                     .orElseThrow(() -> new RuntimeException("Numéro destinataire introuvable"));
 
-            SmsMessage smsMessage = smsMessageService.getMessageById(dto.getIdMessage())
-                    .orElseThrow(() -> new RuntimeException("Message introuvable"));
+            // Récupérer ou créer le message
+            SmsMessage smsMessage;
+            if (dto.getIdMessage() != null) {
+                // Comportement existant : utiliser l'ID fourni
+                smsMessage = smsMessageService.getMessageById(dto.getIdMessage())
+                        .orElseThrow(() -> new RuntimeException("Message introuvable"));
+            } else if (dto.getMessage() != null && !dto.getMessage().isEmpty()) {
+                // NOUVEAU : créer un nouveau message et récupérer son ID
+                SmsMessage newMessage = new SmsMessage(dto.getMessage());
+                Long newId = smsMessageService.createMessageAndGetId(newMessage);
+                smsMessage = smsMessageService.getMessageById(newId).get();
+                System.out.println("=== NOUVEAU MESSAGE CRÉÉ === ID: " + newId);
+            } else {
+                throw new RuntimeException("Message introuvable");
+            }
 
             InfobipInfo infobip = expediteur.getInfobipInfo();
             String url = "https://" + infobip.getBaseUrl() + "/sms/2/text/advanced";
