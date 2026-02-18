@@ -79,7 +79,7 @@ public class InfobipSmsService {
 
             InfobipInfo infobip = expediteur.getInfobipInfo();
             String url = "https://" + infobip.getBaseUrl() + "/sms/2/text/advanced";
-
+            
             // 2️⃣ Préparer les headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

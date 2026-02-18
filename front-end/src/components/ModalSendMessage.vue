@@ -10,7 +10,6 @@
 
       <!-- Info Destinataire -->
       <div v-if="numeroFromParent" class="mb-3">
-        <strong>ID Destinataire :</strong> {{ numeroFromParent.idNumero }} <br>
         <strong>Numéro :</strong> {{ numeroFromParent.valeur || numeroFromParent.numeroDestinataire }}
       </div>
 

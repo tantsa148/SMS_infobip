@@ -36,13 +36,12 @@
 
         <!-- Select Plateforme -->
         <div class="mb-3">
-          <label class="form-label">Plateforme (optionnel)</label>
+          <label class="form-label">Plateforme</label>
           <select
             v-model="selectedPlateformeId"
             class="form-select"
             :disabled="submitting"
           >
-            <option :value="undefined">-- Aucune --</option>
             <option v-for="p in plateformes" :key="p.id" :value="p.id">
               {{ p.nomPlateforme }}
             </option>

@@ -227,3 +227,88 @@ watch(() => props.show, (val) => {
 })
 </script>
 
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Styles spécifiques pour le modal de confirmation */
+.confirmation-overlay {
+  z-index: 1060;
+}
+
+.confirmation-modal {
+  max-width: 450px;
+}
+
+.confirmation-content {
+  text-align: center;
+}
+
+.list-group-item {
+  padding: 8px 0;
+  border: none;
+}
+
+.fw-medium {
+  font-weight: 500;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .modal-content {
+    max-width: 95%;
+  }
+}
+</style>
+

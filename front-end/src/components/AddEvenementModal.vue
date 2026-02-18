@@ -1,70 +1,116 @@
 <template>
   <!-- MODAL PRINCIPAL -->
-  <div v-if="show" class="modal-backdrop-custom">
-    <div class="modal-card">
-      <h5 class="mb-3">Ajouter un événement</h5>
-
-      <input
-        v-model="code"
-        class="form-control mb-2"
-        placeholder="Code événement"
-      />
-
-      <textarea
-        v-model="description"
-        class="form-control mb-3"
-        placeholder="Description"
-      ></textarea>
-
-      <div class="d-flex justify-content-end gap-2">
-        <button class="btn btn-secondary btn-sm" @click="$emit('close')">
-          Annuler
-        </button>
-        <button class="btn btn-primary btn-sm" @click="handleSubmit">
-          Ajouter
-        </button>
+  <div v-if="show" class="modal-overlay" @click.self="closeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Ajouter un événement</h5>
       </div>
+
+      <form @submit.prevent="handleSubmit" class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Code événement</label>
+          <input
+            v-model="code"
+            type="text"
+            class="form-control"
+            placeholder="Entrez le code événement"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea
+            v-model="description"
+            class="form-control"
+            placeholder="Entrez la description"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+
+        <!-- Message d'erreur/succès -->
+        <div
+          v-if="message"
+          :class="['alert', messageType === 'error' ? 'alert-danger' : 'alert-success']"
+          role="alert"
+        >
+          {{ message }}
+        </div>
+
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            @click="closeModal"
+            :disabled="submitting"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="!isFormValid || submitting"
+          >
+            <span v-if="submitting" class="spinner-border spinner-border-sm me-2"></span>
+            {{ submitting ? 'Validation...' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
   <!-- MODAL DE CONFIRMATION -->
-  <div v-if="showConfirmationModal" class="modal-backdrop-custom">
-    <div class="modal-card confirmation-modal">
-      <h5 class="mb-3">Confirmer l'ajout</h5>
-
-      <div class="confirmation-details">
-        <h6 class="mb-3">Détails :</h6>
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item d-flex justify-content-between">
-            <span class="fw-medium">Code :</span>
-            <span class="text-primary">{{ code }}</span>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span class="fw-medium">Description :</span>
-            <span>{{ description }}</span>
-          </li>
-        </ul>
+  <div v-if="showConfirmationModal" class="modal-overlay confirmation-overlay">
+    <div class="modal-content confirmation-modal">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmer l'ajout</h5>
+        <button 
+          type="button" 
+          class="btn-close" 
+          @click="cancelConfirmation"
+          :disabled="confirming"
+        ></button>
       </div>
 
-      <div class="d-flex justify-content-end gap-2 mt-3">
+      <div class="modal-body">
+        <div class="confirmation-content">
+          <div class="text-center mb-3">
+            <i class="bi bi-question-circle text-primary" style="font-size: 3rem;"></i>
+          </div>
+          
+          <p class="text-center mb-3">
+            Êtes-vous sûr de vouloir ajouter cet événement ?
+          </p>
+          
+          <div class="alert alert-light">
+            <div class="mb-2">
+              <strong>Code :</strong> <span class="text-primary">{{ code }}</span>
+            </div>
+            <div class="mb-0">
+              <strong>Description :</strong> {{ description }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
         <button 
-          class="btn btn-outline-secondary btn-sm" 
+          type="button" 
+          class="btn btn-outline-secondary" 
           @click="cancelConfirmation"
           :disabled="confirming"
         >
-          Annuler
+          Non, revenir
         </button>
         <button 
-          class="btn btn-primary btn-sm" 
+          type="button" 
+          class="btn btn-primary" 
           @click="confirmSubmit"
           :disabled="confirming"
         >
-          <span 
-            v-if="confirming" 
-            class="spinner-border spinner-border-sm me-1" 
-            role="status"
-          ></span>
-          {{ confirming ? 'Ajout en cours...' : 'Confirmer l\'ajout' }}
+          <span v-if="confirming" class="spinner-border spinner-border-sm me-2"></span>
+          Oui, ajouter
         </button>
       </div>
     </div>
@@ -72,22 +118,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-defineProps<{ show: boolean }>()
+const props = defineProps<{ show: boolean }>()
 const emit = defineEmits(['close', 'submit'])
 
+// Données du formulaire
 const code = ref('')
 const description = ref('')
 
 // États
+const submitting = ref(false)
 const confirming = ref(false)
+const message = ref('')
+const messageType = ref<'success' | 'error'>('success')
 const showConfirmationModal = ref(false)
 
-// Ouvrir la confirmation
-const handleSubmit = () => {
-  if (!code.value || !description.value) return
-  showConfirmationModal.value = true
+// Validation
+const isFormValid = computed(() => {
+  return code.value.trim() !== '' && description.value.trim() !== ''
+})
+
+// Fermer le modal principal
+const closeModal = () => {
+  if (!submitting.value && !confirming.value) {
+    emit('close')
+    resetForm()
+  }
 }
 
 // Annuler la confirmation
@@ -97,81 +154,160 @@ const cancelConfirmation = () => {
   }
 }
 
-// Confirmer et envoyer
+// Réinitialiser le formulaire
+const resetForm = () => {
+  code.value = ''
+  description.value = ''
+  message.value = ''
+  showConfirmationModal.value = false
+  submitting.value = false
+  confirming.value = false
+}
+
+// Étape 1 : Validation et affichage de la confirmation
+const handleSubmit = () => {
+  if (!isFormValid.value || submitting.value) return
+  
+  submitting.value = true
+  
+  try {
+    console.log('📋 Formulaire validé, affichage de la confirmation')
+    showConfirmationModal.value = true
+  } catch (err: any) {
+    console.error('Erreur validation:', err)
+    showMessage(err.message || 'Erreur de validation', 'error')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// Étape 2 : Confirmation et envoi au parent
 const confirmSubmit = () => {
   if (confirming.value) return
   
   confirming.value = true
+  console.log('✅ Confirmation, envoi des données au parent...')
+  
+  try {
+    emit('submit', {
+      code: code.value,
+      description: description.value,
+    })
+    
+    showMessage('Événement ajouté avec succès !', 'success')
+    resetForm()
+    
+  } catch (err: any) {
+    console.error('Erreur dans confirmSubmit:', err)
+    showMessage('Erreur lors de l\'ajout', 'error')
+    confirming.value = false
+  }
+}
 
-  emit('submit', {
-    code: code.value,
-    description: description.value,
-  })
-
-  // Reset après emission
-  code.value = ''
-  description.value = ''
-  showConfirmationModal.value = false
-  confirming.value = false
+// Afficher un message
+const showMessage = (msg: string, type: 'success' | 'error') => {
+  message.value = msg
+  messageType.value = type
+  
+  setTimeout(() => {
+    if (message.value === msg) message.value = ''
+  }, type === 'error' ? 7000 : 3000)
 }
 </script>
 
 <style scoped>
-.modal-backdrop-custom {
+.modal-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
+  align-items: center;
+  z-index: 1050;
+  padding: 1rem;
 }
 
-.modal-card {
+.modal-content {
   background: white;
-  padding: 20px;
-  width: 400px;
-  border-radius: 8px;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Styles spécifiques pour le modal de confirmation */
+.confirmation-overlay {
+  z-index: 1060;
 }
 
 .confirmation-modal {
-  width: 450px;
+  max-width: 450px;
 }
 
-.confirmation-details {
-  margin-top: 10px;
+.confirmation-content {
+  text-align: center;
 }
 
-.list-group-item {
-  padding: 8px 0;
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin: -0.5rem -0.5rem -0.5rem auto;
 }
 
-.fw-medium {
-  font-weight: 500;
+.btn-close:hover {
+  color: #000;
+}
+
+.btn-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .text-primary {
   color: #0d6efd !important;
 }
 
-.d-flex {
-  display: flex;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.justify-content-end {
-  justify-content: flex-end;
-}
-
-.mt-3 {
-  margin-top: 1rem;
-}
-
-.mb-3 {
-  margin-bottom: 1rem;
+/* Responsive */
+@media (max-width: 576px) {
+  .modal-content {
+    max-width: 95%;
+  }
 }
 </style>
 
