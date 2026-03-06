@@ -1,7 +1,8 @@
-
+-pour se connecter
 --Login (post)
 http://localhost:8080/api/auth/login
 
+-pour s'inscrire
 --Register(post) 
 http://localhost:8080/api/auth/register
 {
@@ -10,11 +11,13 @@ http://localhost:8080/api/auth/register
   "role": "ADMIN"
 }
 
+-plateforme
 --http://localhost:8080/api/plateformes
 {
   "nomPlateforme":"sms"
 }
 
+-liste message
 --http://localhost:8080/api/messages
 {
     "texte": "Votre code OTP est {{code}}",
@@ -23,7 +26,7 @@ http://localhost:8080/api/auth/register
     }
 }
 
-
+-numero twilio
 http://localhost:8080/api/numeros-expediteur
 {
     "valeur": "23242528",
@@ -42,7 +45,7 @@ http://localhost:8080/api/numeros-expediteur
     "idPlateforme": 1
 }
 
-
+-numero destinataire
 --http://localhost:8080/api/numeros_destinataire
 {
   "valeur": "261377428541",
@@ -54,6 +57,7 @@ http://localhost:8080/api/numeros-expediteur
   }
 }
 
+-detail infobip
 --http://localhost:8080/api/infobip
 {
   "apiKey": "NOUVEAU_API_KEY",
@@ -66,6 +70,7 @@ http://localhost:8080/api/users-detail
   "idNumero":3
 }
 
+-envoi de message
 http://localhost:8080/api/sms/send
 {
   "idNumeroExpediteur":1,
@@ -80,7 +85,7 @@ http://localhost:8080/api/evenements
     "description": "Événement pour la génération OTP"
 }
 
-
+-envoie otp
 http://localhost:8080/api/otp/send
 {
   "idNumeroExpediteur":2,
@@ -92,7 +97,7 @@ http://localhost:8080/api/otp/verify
   "idMessageEnvoye":54,
   "code":"636572"
 }
-
+-transaction
 http://localhost:8080/api/transactions/envoyer-sms
 {
   "idNumeroExpediteur": 1,
@@ -101,7 +106,8 @@ http://localhost:8080/api/transactions/envoyer-sms
   "reference": "TXN2026010612345",
   "montant": 75000.00
 }
-POST http://localhost:8080/api/transactions/envoyer-sms-avec-numero
+POST 
+http://localhost:8080/api/transactions/envoyer-sms-avec-numero
 {
     "idNumeroExpediteur": 48,
     "idNumeroDestinataire": 40,
