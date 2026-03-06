@@ -231,7 +231,7 @@ const fetchData = async () => {
 }
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleString()
+  return new Date(date).toLocaleDateString()
 }
 
 // Notification

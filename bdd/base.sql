@@ -272,3 +272,47 @@ CREATE INDEX idx_modele_message_expediteur ON modele_message(id_expediteur);
 CREATE INDEX idx_modele_message_message ON modele_message(id_message);
 CREATE INDEX idx_modele_message_methode ON modele_message(methode);
 
+
+
+
+
+-- Si la table existe déjà et que tu veux la recréer proprement
+DROP TABLE IF EXISTS messages CASCADE;
+
+-- Création de la table messages
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    texte TEXT NOT NULL,
+    id_evenement INTEGER,
+    CONSTRAINT fk_message_evenement FOREIGN KEY (id_evenement)
+        REFERENCES evenement(id)
+);
+
+-- Les contraintes de clés étrangères vers cette table
+-- (à adapter si tu as déjà modele_message et message_envoye)
+ALTER TABLE modele_message
+    ADD CONSTRAINT fk_modele_message
+    FOREIGN KEY (id_message) REFERENCES messages(id)
+    ON DELETE CASCADE;
+
+ALTER TABLE message_envoye
+    ADD CONSTRAINT message_envoye_id_message_fkey
+    FOREIGN KEY (id_message) REFERENCES messages(id);
+
+
+---note
+sms=# \d messages;
+                               Table "public.messages"
+    Column    |  Type   | Collation | Nullable |               Default                
+--------------+---------+-----------+----------+--------------------------------------
+ id           | integer |           | not null | nextval('messages_id_seq'::regclass)
+ texte        | text    |           | not null | 
+ id_evenement | integer |           |          | 
+Indexes:
+    "messages_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fk_message_evenement" FOREIGN KEY (id_evenement) REFERENCES evenement(id)
+Referenced by:
+    TABLE "modele_message" CONSTRAINT "fk_modele_message" FOREIGN KEY (id_message) REFERENCES messages(id) ON DELETE CASCADE
+    TABLE "message_envoye" CONSTRAINT "message_envoye_id_message_fkey" FOREIGN KEY (id_message) REFERENCES messages(id)
+

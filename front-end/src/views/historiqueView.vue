@@ -193,7 +193,7 @@ const plateformes = computed(() => {
 })
 
 function formatDate(date: string | Date) {
-  return new Date(date).toLocaleString()
+  return new Date(date).toLocaleDateString()
 }
 
 const appliquerFiltres = () => {

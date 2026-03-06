@@ -1,0 +1,51 @@
+services:
+
+  db:
+    image: postgres:16
+    container_name: sms-postgres
+    environment:
+      POSTGRES_DB: sms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./back-end
+    image: sms-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/sms
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+
+  client:
+    build: ./client
+    image: sms-client
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/apptest
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+
+  frontend:
+    build: ./front-end
+    image: sms-frontend
+    ports:
+      - "5173:5173"
+    command: ["npm","run","dev","--","--host"]
+    depends_on:
+      - backend
+      - client
+
+volumes:
+  postgres_data:
+
